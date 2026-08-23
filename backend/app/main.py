@@ -17,15 +17,21 @@ from app.models import (
 from app.routers import system, events, core, vision, sensors, act
 from app.websocket_manager import ws_manager
 
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("atlas.main")
 
+
 def seed_sample_data():
     db = SessionLocal()
+
     try:
         # Seed Baseline Events
         if db.query(EventModel).count() == 0:
-            logger.info("Initializing SQLite database with baseline demo event data...")
+            logger.info(
+                "Initializing SQLite database with baseline demo event data..."
+            )
+
             sample_events = [
                 {
                     "event_id": "EVT-101",
@@ -34,7 +40,10 @@ def seed_sample_data():
                     "event_type": "PERSON_DETECTED",
                     "message": "Person detected @ Sector 7 perimeter line",
                     "status": "COMPLETED",
-                    "data_json": json.dumps({"target": "ATLAS-P001", "confidence": 0.994})
+                    "data_json": json.dumps({
+                        "target": "ATLAS-P001",
+                        "confidence": 0.994
+                    })
                 },
                 {
                     "event_id": "EVT-102",
@@ -43,7 +52,10 @@ def seed_sample_data():
                     "event_type": "MOTION_CONFIRMED",
                     "message": "Acoustic and thermal sensors confirmed ground velocity 1.4 m/s",
                     "status": "COMPLETED",
-                    "data_json": json.dumps({"node": "SENSE-NODE-01", "load_kg": 72.4})
+                    "data_json": json.dumps({
+                        "node": "SENSE-NODE-01",
+                        "load_kg": 72.4
+                    })
                 },
                 {
                     "event_id": "EVT-103",
@@ -52,7 +64,9 @@ def seed_sample_data():
                     "event_type": "CONTEXT_EVALUATION",
                     "message": "Evaluating historical clearance parameters & multi-layered risk model",
                     "status": "COMPLETED",
-                    "data_json": json.dumps({"risk_score": 0.12})
+                    "data_json": json.dumps({
+                        "risk_score": 0.12
+                    })
                 },
                 {
                     "event_id": "EVT-104",
@@ -61,7 +75,9 @@ def seed_sample_data():
                     "event_type": "DECISION_GENERATED",
                     "message": "Demo confidence score 98.4%. Action recommended: Dispatch Sentry-Alpha",
                     "status": "COMPLETED",
-                    "data_json": json.dumps({"decision": "Approved predefined verification mission #3804"})
+                    "data_json": json.dumps({
+                        "decision": "Approved predefined verification mission #3804"
+                    })
                 },
                 {
                     "event_id": "EVT-105",
@@ -70,11 +86,16 @@ def seed_sample_data():
                     "event_type": "MISSION_INITIATED",
                     "message": "Navigational route locked and Autonomous Recon Protocol #3804 deployed",
                     "status": "COMPLETED",
-                    "data_json": json.dumps({"mission_id": "MISSION #3804", "unit": "SENTRY-ALPHA"})
+                    "data_json": json.dumps({
+                        "mission_id": "MISSION #3804",
+                        "unit": "SENTRY-ALPHA"
+                    })
                 }
             ]
+
             for se in sample_events:
                 db.add(EventModel(**se))
+
             db.commit()
 
         # Seed Vision Detections
@@ -111,25 +132,101 @@ def seed_sample_data():
                     "hazard_rating": "CLEAR"
                 }
             ]
+
             for sd in sample_detections:
                 db.add(VisionDetectionModel(**sd))
+
             db.commit()
 
         # Seed Sensor Nodes
         if db.query(SensorNodeModel).count() == 0:
             sample_nodes = [
-                {"node_id": "SENSE-NODE-01", "name": "Sector 7 Perimeter Node", "status": "ONLINE", "health": "NOMINAL", "motion": "DETECTED", "distance_m": 2.4, "temp_c": 24.5, "environmental_reading": "NOMINAL // 45% HUMIDITY", "floor_load_kg": 72.4, "battery_level": 98, "last_updated": "10:50:56 UTC"},
-                {"node_id": "SENSE-NODE-02", "name": "Sector 7 Acoustic Array", "status": "ONLINE", "health": "NOMINAL", "motion": "CLEAR", "distance_m": 12.1, "temp_c": 23.8, "environmental_reading": "NOMINAL // 44% HUMIDITY", "floor_load_kg": 0.0, "battery_level": 96, "last_updated": "10:50:50 UTC"},
-                {"node_id": "SENSE-NODE-03", "name": "Sector 3 Perimeter Line", "status": "ONLINE", "health": "NOMINAL", "motion": "CLEAR", "distance_m": 45.0, "temp_c": 22.1, "environmental_reading": "NOMINAL // 40% HUMIDITY", "floor_load_kg": 0.0, "battery_level": 91, "last_updated": "10:50:45 UTC"},
-                {"node_id": "SENSE-NODE-04", "name": "Sector 3 Thermal Matrix", "status": "ONLINE", "health": "NOMINAL", "motion": "CLEAR", "distance_m": 8.0, "temp_c": 25.0, "environmental_reading": "NOMINAL // 42% HUMIDITY", "floor_load_kg": 0.0, "battery_level": 89, "last_updated": "10:50:40 UTC"},
-                {"node_id": "SENSE-NODE-05", "name": "Sector 1 Access Portal", "status": "WARNING", "health": "RECALIBRATING", "motion": "CLEAR", "distance_m": 3.2, "temp_c": 28.2, "environmental_reading": "WARN // 65% HUMIDITY", "floor_load_kg": 0.0, "battery_level": 64, "last_updated": "10:49:10 UTC"},
-                {"node_id": "SENSE-NODE-06", "name": "Sector 5 Substation Node", "status": "ONLINE", "health": "NOMINAL", "motion": "CLEAR", "distance_m": 15.4, "temp_c": 21.9, "environmental_reading": "NOMINAL // 38% HUMIDITY", "floor_load_kg": 0.0, "battery_level": 95, "last_updated": "10:50:30 UTC"}
+                {
+                    "node_id": "SENSE-NODE-01",
+                    "name": "Sector 7 Perimeter Node",
+                    "status": "ONLINE",
+                    "health": "NOMINAL",
+                    "motion": "DETECTED",
+                    "distance_m": 2.4,
+                    "temp_c": 24.5,
+                    "environmental_reading": "NOMINAL // 45% HUMIDITY",
+                    "floor_load_kg": 72.4,
+                    "battery_level": 98,
+                    "last_updated": "10:50:56 UTC"
+                },
+                {
+                    "node_id": "SENSE-NODE-02",
+                    "name": "Sector 7 Acoustic Array",
+                    "status": "ONLINE",
+                    "health": "NOMINAL",
+                    "motion": "CLEAR",
+                    "distance_m": 12.1,
+                    "temp_c": 23.8,
+                    "environmental_reading": "NOMINAL // 44% HUMIDITY",
+                    "floor_load_kg": 0.0,
+                    "battery_level": 96,
+                    "last_updated": "10:50:50 UTC"
+                },
+                {
+                    "node_id": "SENSE-NODE-03",
+                    "name": "Sector 3 Perimeter Line",
+                    "status": "ONLINE",
+                    "health": "NOMINAL",
+                    "motion": "CLEAR",
+                    "distance_m": 45.0,
+                    "temp_c": 22.1,
+                    "environmental_reading": "NOMINAL // 40% HUMIDITY",
+                    "floor_load_kg": 0.0,
+                    "battery_level": 91,
+                    "last_updated": "10:50:45 UTC"
+                },
+                {
+                    "node_id": "SENSE-NODE-04",
+                    "name": "Sector 3 Thermal Matrix",
+                    "status": "ONLINE",
+                    "health": "NOMINAL",
+                    "motion": "CLEAR",
+                    "distance_m": 8.0,
+                    "temp_c": 25.0,
+                    "environmental_reading": "NOMINAL // 42% HUMIDITY",
+                    "floor_load_kg": 0.0,
+                    "battery_level": 89,
+                    "last_updated": "10:50:40 UTC"
+                },
+                {
+                    "node_id": "SENSE-NODE-05",
+                    "name": "Sector 1 Access Portal",
+                    "status": "WARNING",
+                    "health": "RECALIBRATING",
+                    "motion": "CLEAR",
+                    "distance_m": 3.2,
+                    "temp_c": 28.2,
+                    "environmental_reading": "WARN // 65% HUMIDITY",
+                    "floor_load_kg": 0.0,
+                    "battery_level": 64,
+                    "last_updated": "10:49:10 UTC"
+                },
+                {
+                    "node_id": "SENSE-NODE-06",
+                    "name": "Sector 5 Substation Node",
+                    "status": "ONLINE",
+                    "health": "NOMINAL",
+                    "motion": "CLEAR",
+                    "distance_m": 15.4,
+                    "temp_c": 21.9,
+                    "environmental_reading": "NOMINAL // 38% HUMIDITY",
+                    "floor_load_kg": 0.0,
+                    "battery_level": 95,
+                    "last_updated": "10:50:30 UTC"
+                }
             ]
+
             for sn in sample_nodes:
                 db.add(SensorNodeModel(**sn))
+
             db.commit()
 
-        # Seed ACT Mission History (Ensuring MISSION #3804 is primary)
+        # Seed ACT Mission History
         if db.query(ActMissionHistoryModel).count() == 0:
             sample_missions = [
                 {
@@ -157,23 +254,35 @@ def seed_sample_data():
                     "timestamp": "09:30:00 UTC"
                 }
             ]
+
             for sm in sample_missions:
                 db.add(ActMissionHistoryModel(**sm))
+
             db.commit()
 
-        logger.info("All 5 ATLAS backend module baseline tables initialized & seeded successfully.")
+        logger.info(
+            "All 5 ATLAS backend module baseline tables initialized & seeded successfully."
+        )
+
     except Exception as e:
         logger.error(f"Error seeding baseline data: {e}")
+
     finally:
         db.close()
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: Create tables and seed data
     Base.metadata.create_all(bind=engine)
     seed_sample_data()
+
     yield
-    logger.info("Shutting down ATLAS Command Center backend service.")
+
+    logger.info(
+        "Shutting down ATLAS Command Center backend service."
+    )
+
 
 app = FastAPI(
     title="ATLAS Command Center Backend",
@@ -182,7 +291,11 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS Configuration for local frontend development (supporting Vite multi-port fallbacks)
+
+# ---------------------------------------------------------
+# CORS Configuration
+# ---------------------------------------------------------
+# Local development + deployed Render frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -191,14 +304,18 @@ app.add_middleware(
         "http://localhost:3001",
         "http://127.0.0.1:3001",
         "http://localhost:5173",
-        "http://127.0.0.1:5173"
+        "http://127.0.0.1:5173",
+        "https://atlas-command-center-1.onrender.com",
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include Routers for all 5 ATLAS modules
+
+# ---------------------------------------------------------
+# Include Routers
+# ---------------------------------------------------------
 app.include_router(system.router)
 app.include_router(events.router)
 app.include_router(core.router)
@@ -206,16 +323,32 @@ app.include_router(vision.router)
 app.include_router(sensors.router)
 app.include_router(act.router)
 
+
+# ---------------------------------------------------------
 # WebSocket Endpoint
+# ---------------------------------------------------------
 @app.websocket("/ws/events")
-async def websocket_events_endpoint(websocket: WebSocket):
+async def websocket_events_endpoint(
+    websocket: WebSocket
+):
     await ws_manager.connect(websocket)
+
     try:
         while True:
             data = await websocket.receive_text()
-            await websocket.send_text(json.dumps({"type": "PONG", "message": "Connection active"}))
+
+            await websocket.send_text(
+                json.dumps({
+                    "type": "PONG",
+                    "message": "Connection active"
+                })
+            )
+
     except WebSocketDisconnect:
         ws_manager.disconnect(websocket)
+
     except Exception as e:
-        logger.warning(f"WebSocket connection error: {e}")
+        logger.warning(
+            f"WebSocket connection error: {e}"
+        )
         ws_manager.disconnect(websocket)
