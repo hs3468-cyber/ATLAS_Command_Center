@@ -1,74 +1,202 @@
 /**
  * ATLAS Command Center — REST API Integration Service
- * Configured via VITE_API_BASE_URL environment variable.
+ *
+ * Frontend <-> FastAPI Backend
+ *
+ * Local development:
+ * VITE_API_BASE_URL=http://127.0.0.1:8000
+ *
+ * Wi-Fi / teammate OS:
+ * VITE_API_BASE_URL=http://YOUR-PC-IP:8000
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+
 
 /**
- * Generic safe HTTP GET fetch wrapper
+ * Generic HTTP request helper
  */
 async function safeFetch(endpoint, options = {}) {
-  if (!API_BASE_URL) {
-    return { isConnected: false, data: null, message: 'No API base URL configured (Demo Mode)' };
-  }
-
   try {
-    const url = `${API_BASE_URL.replace(/\/$/, '')}/${endpoint.replace(/^\//, '')}`;
+    const url =
+      `${API_BASE_URL.replace(/\/$/, '')}/` +
+      `${endpoint.replace(/^\//, '')}`;
+
     const response = await fetch(url, {
-      headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
-      ...options
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options.headers || {}),
+      },
+      ...options,
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      throw new Error(
+        `HTTP ${response.status}: ${response.statusText}`
+      );
     }
 
     const data = await response.json();
-    return { isConnected: true, data, error: null };
+
+    return {
+      isConnected: true,
+      data,
+      error: null,
+    };
   } catch (error) {
-    console.warn(`[ATLAS API Service] Endpoint '${endpoint}' unreachable:`, error.message);
-    return { isConnected: false, data: null, error: error.message };
+    console.warn(
+      `[ATLAS API] ${endpoint} unreachable:`,
+      error.message
+    );
+
+    return {
+      isConnected: false,
+      data: null,
+      error: error.message,
+    };
   }
 }
 
+
 export const apiService = {
+
+  // --------------------------------------------------
+  // CONNECTION
+  // --------------------------------------------------
+
   getBaseUrl: () => API_BASE_URL,
+
   isConfigured: () => Boolean(API_BASE_URL),
 
-  // System & Events
-  getSystemStatus: () => safeFetch('/api/system/status'),
-  getRecentEvents: (limit = 50) => safeFetch(`/api/events?limit=${limit}`),
 
-  // Core Intelligence Module
-  getCoreStatus: () => safeFetch('/api/core/status'),
-  getCoreDecisions: (limit = 50) => safeFetch(`/api/core/decisions?limit=${limit}`),
-  getCoreDecisionById: (decisionId) => safeFetch(`/api/core/decisions/${decisionId}`),
+  // --------------------------------------------------
+  // SYSTEM
+  // --------------------------------------------------
 
-  // Vision Intelligence Module
-  getVisionStatus: () => safeFetch('/api/vision/status'),
-  getVisionDetections: () => safeFetch('/api/vision/detections'),
-  getVisionDetectionById: (subjectId) => safeFetch(`/api/vision/detections/${subjectId}`),
+  getSystemStatus: () =>
+    safeFetch('/api/system/status'),
 
-  // Sensor Network Module
-  getSensorStatus: () => safeFetch('/api/sensors/status'),
-  getSensorNodes: () => safeFetch('/api/sensors/nodes'),
-  getSensorNodeById: (nodeId) => safeFetch(`/api/sensors/nodes/${nodeId}`),
-  getSensorEvents: (limit = 50) => safeFetch(`/api/sensors/events?limit=${limit}`),
+  getHealth: () =>
+    safeFetch('/api/health'),
 
-  // ATLAS Act Module
-  getActStatus: () => safeFetch('/api/act/status'),
-  getActMission: () => safeFetch('/api/act/mission'),
-  getActHistory: () => safeFetch('/api/act/history'),
 
-  // Ingestion & Demo Trigger
-  postEvent: (eventData) => safeFetch('/api/events', {
-    method: 'POST',
-    body: JSON.stringify(eventData)
-  }),
+  // --------------------------------------------------
+  // EVENTS
+  // --------------------------------------------------
 
-  triggerDemoSequence: () => safeFetch('/api/events/demo', {
-    method: 'POST',
-    body: JSON.stringify({})
-  })
+  getRecentEvents: (limit = 50) =>
+    safeFetch(`/api/events?limit=${limit}`),
+
+  getEventsBySource: (source, limit = 50) =>
+    safeFetch(
+      `/api/events?source=${encodeURIComponent(source)}&limit=${limit}`
+    ),
+
+  getEventById: (eventId) =>
+    safeFetch(
+      `/api/events/${encodeURIComponent(eventId)}`
+    ),
+
+  postEvent: (eventData) =>
+    safeFetch('/api/events', {
+      method: 'POST',
+      body: JSON.stringify(eventData),
+    }),
+
+  triggerDemoSequence: () =>
+    safeFetch('/api/events/demo', {
+      method: 'POST',
+      body: JSON.stringify({}),
+    }),
+
+
+  // --------------------------------------------------
+  // VISION
+  // --------------------------------------------------
+
+  getVisionStatus: () =>
+    safeFetch('/api/vision/status'),
+
+  getVisionDetections: () =>
+    safeFetch('/api/vision/detections'),
+
+  getVisionDetectionById: (subjectId) =>
+    safeFetch(
+      `/api/vision/detections/${encodeURIComponent(subjectId)}`
+    ),
+
+  /**
+   * User-controlled Vision ON/OFF
+   *
+   * enabled = true  -> camera ON
+   * enabled = false -> camera OFF
+   */
+  updateVisionStatus: (enabled) =>
+    safeFetch(
+      `/api/vision/status?enabled=${Boolean(enabled)}`,
+      {
+        method: 'PUT',
+      }
+    ),
+
+
+  // --------------------------------------------------
+  // CORE INTELLIGENCE
+  // --------------------------------------------------
+
+  getCoreStatus: () =>
+    safeFetch('/api/core/status'),
+
+  getCoreDecisions: (limit = 50) =>
+    safeFetch(`/api/core/decisions?limit=${limit}`),
+
+  getCoreDecisionById: (decisionId) =>
+    safeFetch(
+      `/api/core/decisions/${encodeURIComponent(decisionId)}`
+    ),
+
+  processCoreEvent: (eventId) =>
+    safeFetch('/api/core/process', {
+      method: 'POST',
+      body: JSON.stringify({
+        event_id: eventId,
+      }),
+    }),
+
+
+  // --------------------------------------------------
+  // SENSOR NETWORK
+  // --------------------------------------------------
+
+  getSensorStatus: () =>
+    safeFetch('/api/sensors/status'),
+
+  getSensorNodes: () =>
+    safeFetch('/api/sensors/nodes'),
+
+  getSensorNodeById: (nodeId) =>
+    safeFetch(
+      `/api/sensors/nodes/${encodeURIComponent(nodeId)}`
+    ),
+
+  getSensorEvents: (limit = 50) =>
+    safeFetch(`/api/sensors/events?limit=${limit}`),
+
+
+  // --------------------------------------------------
+  // ACT
+  // --------------------------------------------------
+
+  getActStatus: () =>
+    safeFetch('/api/act/status'),
+
+  getActMission: () =>
+    safeFetch('/api/act/mission'),
+
+  getActHistory: () =>
+    safeFetch('/api/act/history'),
 };
+
+
+export default apiService;

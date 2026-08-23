@@ -1,19 +1,70 @@
-import React from 'react';
-import { useAtlasSimulation } from '../context/AtlasSimulationContext';
+import React, { useEffect, useState } from 'react';
+import apiService from '../services/apiService';
 
 export const CoreIntelligencePage = () => {
-  const {
-    currentCoreDecision,
-    currentSystemState,
-    currentModuleStates,
-  } = useAtlasSimulation();
+  const [coreStatus, setCoreStatus] = useState(null);
+  const [decisions, setDecisions] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const coreState = currentModuleStates?.core;
+  const loadCoreData = async () => {
+    try {
+      const [statusResponse, decisionsResponse] =
+        await Promise.all([
+          apiService.getCoreStatus(),
+          apiService.getCoreDecisions(10),
+        ]);
+
+      if (
+        statusResponse.isConnected &&
+        statusResponse.data
+      ) {
+        setCoreStatus(statusResponse.data);
+      }
+
+      if (
+        decisionsResponse.isConnected &&
+        Array.isArray(decisionsResponse.data)
+      ) {
+        setDecisions(decisionsResponse.data);
+      }
+    } catch (error) {
+      console.error(
+        '[CORE] Failed to load core data:',
+        error
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCoreData();
+
+    const interval = setInterval(
+      loadCoreData,
+      5000
+    );
+
+    return () => clearInterval(interval);
+  }, []);
 
   const status =
-    coreState?.status ||
-    coreState?.stateSummary ||
-    'ONLINE';
+    coreStatus?.status || 'ONLINE';
+
+  const systemState =
+    coreStatus?.state || 'MONITORING';
+
+  const processingMode =
+    coreStatus?.processing_mode ||
+    'RULE_BASED_DEMO';
+
+  const decisionsCount =
+    coreStatus?.decisions_count ?? 0;
+
+  const latestDecision =
+    decisions.length > 0
+      ? decisions[0]
+      : null;
 
   return (
     <div
@@ -31,10 +82,12 @@ export const CoreIntelligencePage = () => {
           margin: '0 auto',
         }}
       >
-        {/* Header */}
+
+        {/* HEADER */}
         <div
           style={{
-            borderBottom: '1px solid #e5e7eb',
+            borderBottom:
+              '1px solid #e5e7eb',
             paddingBottom: '20px',
             marginBottom: '25px',
           }}
@@ -57,20 +110,29 @@ export const CoreIntelligencePage = () => {
               fontSize: '15px',
             }}
           >
-            Intelligence, context and decision information
+            Intelligence, context and decision
+            information
           </p>
         </div>
 
-        {/* Status */}
+
+        {/* CORE STATUS */}
         <div
           style={{
-            border: '1px solid #d1d5db',
+            border:
+              '1px solid #d1d5db',
             borderRadius: '8px',
             padding: '20px',
             marginBottom: '20px',
           }}
         >
-          <h2 style={{ margin: '0 0 15px', fontSize: '18px' }}>
+          <h2
+            style={{
+              margin:
+                '0 0 15px',
+              fontSize: '18px',
+            }}
+          >
             Core Status
           </h2>
 
@@ -87,11 +149,18 @@ export const CoreIntelligencePage = () => {
                 width: '10px',
                 height: '10px',
                 borderRadius: '50%',
-                background: '#22c55e',
+                background:
+                  status === 'ONLINE'
+                    ? '#22c55e'
+                    : '#ef4444',
               }}
             />
 
-            <strong>{status}</strong>
+            <strong>
+              {loading
+                ? 'LOADING...'
+                : status}
+            </strong>
           </div>
 
           <div
@@ -102,22 +171,71 @@ export const CoreIntelligencePage = () => {
             }}
           >
             Current system state:{' '}
-            <strong style={{ color: '#374151' }}>
-              {currentSystemState || 'Monitoring'}
+
+            <strong
+              style={{
+                color: '#374151',
+              }}
+            >
+              {systemState}
+            </strong>
+          </div>
+
+          <div
+            style={{
+              marginTop: '8px',
+              color: '#6b7280',
+              fontSize: '14px',
+            }}
+          >
+            Processing mode:{' '}
+
+            <strong
+              style={{
+                color: '#374151',
+              }}
+            >
+              {processingMode}
+            </strong>
+          </div>
+
+          <div
+            style={{
+              marginTop: '8px',
+              color: '#6b7280',
+              fontSize: '14px',
+            }}
+          >
+            Decisions generated:{' '}
+
+            <strong
+              style={{
+                color: '#374151',
+              }}
+            >
+              {decisionsCount}
             </strong>
           </div>
         </div>
 
-        {/* Current Input */}
+
+        {/* CURRENT INPUT */}
         <div
           style={{
-            border: '1px solid #d1d5db',
+            border:
+              '1px solid #d1d5db',
             borderRadius: '8px',
             padding: '20px',
             marginBottom: '20px',
           }}
         >
-          <h2 style={{ margin: '0 0 12px', fontSize: '18px' }}>
+          <h2
+            style={{
+              margin:
+                '0 0 12px',
+              fontSize: '18px',
+            }}
+          >
             Current Input
           </h2>
 
@@ -128,22 +246,31 @@ export const CoreIntelligencePage = () => {
               lineHeight: '1.6',
             }}
           >
-            {currentCoreDecision?.inputReceived ||
+            {latestDecision?.context_summary ||
+              latestDecision?.inputReceived ||
               'Information received from Vision and Sense.'}
           </p>
         </div>
 
-        {/* Context */}
+
+        {/* ASSESSMENT */}
         <div
           style={{
-            border: '1px solid #d1d5db',
+            border:
+              '1px solid #d1d5db',
             borderRadius: '8px',
             padding: '20px',
             marginBottom: '20px',
           }}
         >
-          <h2 style={{ margin: '0 0 12px', fontSize: '18px' }}>
-            Context
+          <h2
+            style={{
+              margin:
+                '0 0 12px',
+              fontSize: '18px',
+            }}
+          >
+            Assessment
           </h2>
 
           <p
@@ -153,21 +280,29 @@ export const CoreIntelligencePage = () => {
               lineHeight: '1.6',
             }}
           >
-            {currentCoreDecision?.context ||
+            {latestDecision?.assessment ||
               'The available information is being evaluated to understand the current situation.'}
           </p>
         </div>
 
-        {/* Decision */}
+
+        {/* DECISION */}
         <div
           style={{
-            border: '1px solid #d1d5db',
+            border:
+              '1px solid #d1d5db',
             borderRadius: '8px',
             padding: '20px',
             marginBottom: '20px',
           }}
         >
-          <h2 style={{ margin: '0 0 12px', fontSize: '18px' }}>
+          <h2
+            style={{
+              margin:
+                '0 0 12px',
+              fontSize: '18px',
+            }}
+          >
             Current Decision
           </h2>
 
@@ -179,21 +314,44 @@ export const CoreIntelligencePage = () => {
               fontWeight: 600,
             }}
           >
-            {currentCoreDecision?.decision ||
-              'No new decision is currently required.'}
+            {latestDecision?.decision ||
+              'No new decision is currently available.'}
           </p>
+
+          {latestDecision?.approved_action && (
+            <div
+              style={{
+                marginTop: '12px',
+                color: '#4b5563',
+                lineHeight: '1.6',
+              }}
+            >
+              <strong>
+                Approved Action:
+              </strong>{' '}
+              {latestDecision.approved_action}
+            </div>
+          )}
         </div>
 
-        {/* Report */}
+
+        {/* REPORT */}
         <div
           style={{
-            border: '1px solid #d1d5db',
+            border:
+              '1px solid #d1d5db',
             borderRadius: '8px',
             padding: '20px',
             marginBottom: '20px',
           }}
         >
-          <h2 style={{ margin: '0 0 12px', fontSize: '18px' }}>
+          <h2
+            style={{
+              margin:
+                '0 0 12px',
+              fontSize: '18px',
+            }}
+          >
             Current Report
           </h2>
 
@@ -204,77 +362,112 @@ export const CoreIntelligencePage = () => {
               lineHeight: '1.6',
             }}
           >
-            ATLAS Core is processing information received from the
-            connected modules. It combines the available context and
-            produces a concise decision for the current situation.
+            ATLAS Core is processing information
+            received from connected modules and
+            producing decisions based on the
+            available context.
           </p>
         </div>
 
-        {/* History */}
+
+        {/* DECISION HISTORY */}
         <div
           style={{
-            border: '1px solid #d1d5db',
+            border:
+              '1px solid #d1d5db',
             borderRadius: '8px',
             padding: '20px',
           }}
         >
-          <h2 style={{ margin: '0 0 15px', fontSize: '18px' }}>
+          <h2
+            style={{
+              margin:
+                '0 0 15px',
+              fontSize: '18px',
+            }}
+          >
             Recent Decision History
           </h2>
 
-          <div
-            style={{
-              padding: '12px 0',
-              borderBottom: '1px solid #e5e7eb',
-            }}
-          >
-            <strong>Information received</strong>
-
-            <div
+          {loading ? (
+            <p
               style={{
-                marginTop: '4px',
                 color: '#6b7280',
-                fontSize: '13px',
               }}
             >
-              Vision and Sense information processed by Core.
-            </div>
-          </div>
+              Loading Core decisions...
+            </p>
+          ) : decisions.length > 0 ? (
+            decisions
+              .slice(0, 5)
+              .map((decision, index) => (
+                <div
+                  key={
+                    decision.decision_id ||
+                    decision.id ||
+                    index
+                  }
+                  style={{
+                    padding:
+                      '12px 0',
+                    borderBottom:
+                      index <
+                        Math.min(
+                          decisions.length,
+                          5
+                        ) - 1
+                        ? '1px solid #e5e7eb'
+                        : 'none',
+                  }}
+                >
+                  <strong>
+                    {decision.decision ||
+                      'Decision generated'}
+                  </strong>
 
-          <div
-            style={{
-              padding: '12px 0',
-              borderBottom: '1px solid #e5e7eb',
-            }}
-          >
-            <strong>Context evaluated</strong>
+                  <div
+                    style={{
+                      marginTop:
+                        '4px',
+                      color:
+                        '#6b7280',
+                      fontSize:
+                        '13px',
+                    }}
+                  >
+                    {decision.assessment ||
+                      decision.context_summary ||
+                      'Core decision recorded.'}
+                  </div>
 
-            <div
+                  {decision.approved_action && (
+                    <div
+                      style={{
+                        marginTop:
+                          '5px',
+                        color:
+                          '#6b7280',
+                        fontSize:
+                          '13px',
+                      }}
+                    >
+                      Action:{' '}
+                      {decision.approved_action}
+                    </div>
+                  )}
+                </div>
+              ))
+          ) : (
+            <p
               style={{
-                marginTop: '4px',
                 color: '#6b7280',
-                fontSize: '13px',
               }}
             >
-              Available information was evaluated for the current
-              situation.
-            </div>
-          </div>
-
-          <div style={{ padding: '12px 0' }}>
-            <strong>Decision generated</strong>
-
-            <div
-              style={{
-                marginTop: '4px',
-                color: '#6b7280',
-                fontSize: '13px',
-              }}
-            >
-              Current decision is available to the ATLAS system.
-            </div>
-          </div>
+              No Core decisions available.
+            </p>
+          )}
         </div>
+
       </div>
     </div>
   );

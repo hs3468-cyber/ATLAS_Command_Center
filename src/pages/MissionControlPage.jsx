@@ -7,36 +7,64 @@ export const MissionControlPage = ({ setActivePage }) => {
   const modules = [
     {
       key: 'vision-intelligence',
+      stateKey: 'vision',
       name: 'VISION',
       device: 'Camera',
       description: 'Observation and surveillance system',
     },
     {
       key: 'sensor-network',
+      stateKey: 'sense',
       name: 'SENSE',
       device: 'Sensors',
       description: 'Environmental and physical sensor network',
     },
     {
       key: 'core-intelligence',
+      stateKey: 'core',
       name: 'CORE',
       device: 'Intelligence',
       description: 'Information processing and decision system',
     },
     {
       key: 'atlas-act',
+      stateKey: 'act',
       name: 'ACT',
       device: 'Drone',
       description: 'Approved mission and action system',
     },
   ];
 
-  const getStatus = (key) => {
-    const module = currentModuleStates?.[key];
+  const getStatus = (stateKey) => {
+    const moduleState = currentModuleStates?.[stateKey];
 
-    if (!module) return 'ONLINE';
+    if (!moduleState) {
+      return 'OFFLINE';
+    }
 
-    return module.stateSummary || module.status || 'ONLINE';
+    // Prefer the actual backend status
+    if (moduleState.status) {
+      return moduleState.status;
+    }
+
+    if (moduleState.stateSummary) {
+      return moduleState.stateSummary;
+    }
+
+    return 'ONLINE';
+  };
+
+  const isOnline = (stateKey) => {
+    const status = getStatus(stateKey).toUpperCase();
+
+    return ![
+      'OFF',
+      'OFFLINE',
+      'INACTIVE',
+      'STOPPED',
+      'ERROR',
+      'NOT MONITORING',
+    ].includes(status);
   };
 
   const openModule = (moduleKey) => {
@@ -87,6 +115,7 @@ export const MissionControlPage = ({ setActivePage }) => {
             Connected device and system overview
           </p>
 
+          {/* SYSTEM STATUS */}
           <div
             style={{
               display: 'inline-flex',
@@ -121,97 +150,119 @@ export const MissionControlPage = ({ setActivePage }) => {
             gap: '24px',
           }}
         >
-          {modules.map((module) => (
-            <div
-              key={module.key}
-              style={{
-                border: '1px solid #d1d5db',
-                borderRadius: '10px',
-                padding: '28px',
-                background: '#ffffff',
-              }}
-            >
+          {modules.map((module) => {
+            const status = getStatus(module.stateKey);
+            const online = isOnline(module.stateKey);
+
+            return (
               <div
+                key={module.key}
                 style={{
-                  fontSize: '13px',
-                  color: '#6b7280',
-                  marginBottom: '8px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '10px',
+                  padding: '28px',
+                  background: '#ffffff',
                 }}
               >
-                CONNECTED DEVICE
-              </div>
-
-              <h2
-                style={{
-                  margin: 0,
-                  fontSize: '25px',
-                  fontWeight: 600,
-                  color: '#111827',
-                }}
-              >
-                {module.name}
-              </h2>
-
-              <div
-                style={{
-                  marginTop: '5px',
-                  fontSize: '16px',
-                  color: '#374151',
-                }}
-              >
-                {module.device}
-              </div>
-
-              <p
-                style={{
-                  margin: '15px 0',
-                  color: '#6b7280',
-                  fontSize: '14px',
-                  lineHeight: '1.5',
-                  minHeight: '42px',
-                }}
-              >
-                {module.description}
-              </p>
-
-              <div
-                style={{
-                  borderTop: '1px solid #e5e7eb',
-                  paddingTop: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '15px',
-                }}
-              >
-                <span
+                <div
                   style={{
-                    fontSize: '14px',
+                    fontSize: '13px',
+                    color: '#6b7280',
+                    marginBottom: '8px',
+                  }}
+                >
+                  CONNECTED DEVICE
+                </div>
+
+                <h2
+                  style={{
+                    margin: 0,
+                    fontSize: '25px',
+                    fontWeight: 600,
+                    color: '#111827',
+                  }}
+                >
+                  {module.name}
+                </h2>
+
+                <div
+                  style={{
+                    marginTop: '5px',
+                    fontSize: '16px',
                     color: '#374151',
                   }}
                 >
-                  Status:{' '}
-                  <strong>{getStatus(module.key)}</strong>
-                </span>
+                  {module.device}
+                </div>
 
-                <button
-                  type="button"
-                  onClick={() => openModule(module.key)}
+                <p
                   style={{
-                    background: '#111827',
-                    color: '#ffffff',
-                    border: 'none',
-                    borderRadius: '6px',
-                    padding: '9px 15px',
-                    fontSize: '13px',
-                    cursor: 'pointer',
+                    margin: '15px 0',
+                    color: '#6b7280',
+                    fontSize: '14px',
+                    lineHeight: '1.5',
+                    minHeight: '42px',
                   }}
                 >
-                  View Details
-                </button>
+                  {module.description}
+                </p>
+
+                {/* STATUS */}
+                <div
+                  style={{
+                    borderTop: '1px solid #e5e7eb',
+                    paddingTop: '15px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '15px',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '14px',
+                      color: '#374151',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '7px',
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: '9px',
+                        height: '9px',
+                        borderRadius: '50%',
+                        background: online
+                          ? '#22c55e'
+                          : '#ef4444',
+                      }}
+                    />
+
+                    Status:{' '}
+                    <strong>
+                      {status}
+                    </strong>
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() => openModule(module.key)}
+                    style={{
+                      background: '#111827',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '6px',
+                      padding: '9px 15px',
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    View Details
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* FOOTER */}

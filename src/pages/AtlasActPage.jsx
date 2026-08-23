@@ -1,21 +1,105 @@
-import React from 'react';
-import { useAtlasSimulation } from '../context/AtlasSimulationContext';
+import React, { useEffect, useState } from 'react';
+import apiService from '../services/apiService';
 
 export const AtlasActPage = () => {
-  const {
-    activeStep,
-    actMissionProgress,
-    currentModuleStates,
-  } = useAtlasSimulation();
+  const [actStatus, setActStatus] = useState(null);
+  const [mission, setMission] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const actState = currentModuleStates?.act;
+  const loadActData = async () => {
+    try {
+      const [
+        statusResponse,
+        missionResponse,
+        historyResponse,
+      ] = await Promise.all([
+        apiService.getActStatus(),
+        apiService.getActMission(),
+        apiService.getActHistory(),
+      ]);
 
-  const isExecuting = activeStep >= 4;
+      if (
+        statusResponse.isConnected &&
+        statusResponse.data
+      ) {
+        setActStatus(statusResponse.data);
+      }
+
+      if (
+        missionResponse.isConnected &&
+        missionResponse.data
+      ) {
+        setMission(missionResponse.data);
+      }
+
+      if (
+        historyResponse.isConnected &&
+        Array.isArray(historyResponse.data)
+      ) {
+        setHistory(historyResponse.data);
+      }
+    } catch (error) {
+      console.error(
+        '[ACT] Failed to load ACT data:',
+        error
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadActData();
+
+    const interval = setInterval(
+      loadActData,
+      5000
+    );
+
+    return () => clearInterval(interval);
+  }, []);
 
   const status =
-    actState?.status ||
-    actState?.stateSummary ||
-    (isExecuting ? 'EXECUTING' : 'READY');
+    actStatus?.status || 'READY';
+
+  const missionId =
+    mission?.mission_id ||
+    actStatus?.current_mission_id ||
+    'No active mission';
+
+  const missionName =
+    mission?.name ||
+    'No active mission';
+
+  const unit =
+    mission?.unit ||
+    actStatus?.unit_status ||
+    'STANDBY';
+
+  const stage =
+    mission?.stage ||
+    'VERIFICATION';
+
+  const progress =
+    mission?.progress ?? 0;
+
+  const executionStatus =
+    mission?.execution_status ||
+    'STANDBY';
+
+  const battery =
+    mission?.battery_demo_value ?? 0;
+
+  const signal =
+    mission?.signal_demo_value ?? 0;
+
+  const telemetry =
+    mission?.telemetry_summary ||
+    'No telemetry available.';
+
+  const isExecuting =
+    executionStatus === 'EXECUTING';
 
   return (
     <div
@@ -33,10 +117,12 @@ export const AtlasActPage = () => {
           margin: '0 auto',
         }}
       >
-        {/* Header */}
+
+        {/* HEADER */}
         <div
           style={{
-            borderBottom: '1px solid #e5e7eb',
+            borderBottom:
+              '1px solid #e5e7eb',
             paddingBottom: '20px',
             marginBottom: '25px',
           }}
@@ -59,20 +145,29 @@ export const AtlasActPage = () => {
               fontSize: '15px',
             }}
           >
-            Drone status, mission and approved action information
+            Drone status, mission and approved
+            action information
           </p>
         </div>
 
-        {/* Drone Status */}
+
+        {/* DRONE STATUS */}
         <div
           style={{
-            border: '1px solid #d1d5db',
+            border:
+              '1px solid #d1d5db',
             borderRadius: '8px',
             padding: '20px',
             marginBottom: '20px',
           }}
         >
-          <h2 style={{ margin: '0 0 15px', fontSize: '18px' }}>
+          <h2
+            style={{
+              margin:
+                '0 0 15px',
+              fontSize: '18px',
+            }}
+          >
             Drone Status
           </h2>
 
@@ -89,80 +184,255 @@ export const AtlasActPage = () => {
                 width: '10px',
                 height: '10px',
                 borderRadius: '50%',
-                background: '#22c55e',
+                background:
+                  status === 'READY' ||
+                    status === 'EXECUTING'
+                    ? '#22c55e'
+                    : '#ef4444',
               }}
             />
 
-            <strong>{status}</strong>
+            <strong>
+              {loading
+                ? 'LOADING...'
+                : status}
+            </strong>
           </div>
         </div>
 
-        {/* Mission */}
+
+        {/* CURRENT MISSION */}
         <div
           style={{
-            border: '1px solid #d1d5db',
+            border:
+              '1px solid #d1d5db',
             borderRadius: '8px',
             padding: '20px',
             marginBottom: '20px',
           }}
         >
-          <h2 style={{ margin: '0 0 18px', fontSize: '18px' }}>
+          <h2
+            style={{
+              margin:
+                '0 0 18px',
+              fontSize: '18px',
+            }}
+          >
             Current Mission
           </h2>
 
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
+              gridTemplateColumns:
+                'repeat(2, 1fr)',
               gap: '18px',
             }}
           >
+
             <div>
-              <div style={{ color: '#6b7280', fontSize: '13px' }}>
+              <div
+                style={{
+                  color: '#6b7280',
+                  fontSize: '13px',
+                }}
+              >
+                Mission ID
+              </div>
+
+              <strong>
+                {missionId}
+              </strong>
+            </div>
+
+
+            <div>
+              <div
+                style={{
+                  color: '#6b7280',
+                  fontSize: '13px',
+                }}
+              >
+                Mission Name
+              </div>
+
+              <strong>
+                {missionName}
+              </strong>
+            </div>
+
+
+            <div>
+              <div
+                style={{
+                  color: '#6b7280',
+                  fontSize: '13px',
+                }}
+              >
                 Mission Status
               </div>
 
               <strong>
-                {isExecuting ? 'In Progress' : 'Standby'}
+                {isExecuting
+                  ? 'In Progress'
+                  : executionStatus}
               </strong>
             </div>
 
+
             <div>
-              <div style={{ color: '#6b7280', fontSize: '13px' }}>
+              <div
+                style={{
+                  color: '#6b7280',
+                  fontSize: '13px',
+                }}
+              >
                 Mission Progress
               </div>
 
-              <strong>{actMissionProgress || 0}%</strong>
+              <strong>
+                {progress}%
+              </strong>
             </div>
+
 
             <div>
-              <div style={{ color: '#6b7280', fontSize: '13px' }}>
-                Connection
+              <div
+                style={{
+                  color: '#6b7280',
+                  fontSize: '13px',
+                }}
+              >
+                Assigned Unit
               </div>
 
-              <strong>Connected</strong>
+              <strong>
+                {unit}
+              </strong>
             </div>
+
 
             <div>
-              <div style={{ color: '#6b7280', fontSize: '13px' }}>
-                Safety Status
+              <div
+                style={{
+                  color: '#6b7280',
+                  fontSize: '13px',
+                }}
+              >
+                Mission Stage
               </div>
 
-              <strong>Normal</strong>
+              <strong>
+                {stage}
+              </strong>
             </div>
+
           </div>
         </div>
 
-        {/* Current Action */}
+
+        {/* TELEMETRY */}
         <div
           style={{
-            border: '1px solid #d1d5db',
+            border:
+              '1px solid #d1d5db',
             borderRadius: '8px',
             padding: '20px',
             marginBottom: '20px',
           }}
         >
-          <h2 style={{ margin: '0 0 12px', fontSize: '18px' }}>
+          <h2
+            style={{
+              margin:
+                '0 0 18px',
+              fontSize: '18px',
+            }}
+          >
+            Telemetry
+          </h2>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns:
+                'repeat(2, 1fr)',
+              gap: '18px',
+            }}
+          >
+
+            <div>
+              <div
+                style={{
+                  color: '#6b7280',
+                  fontSize: '13px',
+                }}
+              >
+                Battery
+              </div>
+
+              <strong>
+                {battery}%
+              </strong>
+            </div>
+
+
+            <div>
+              <div
+                style={{
+                  color: '#6b7280',
+                  fontSize: '13px',
+                }}
+              >
+                Signal
+              </div>
+
+              <strong>
+                {signal}%
+              </strong>
+            </div>
+
+
+            <div
+              style={{
+                gridColumn:
+                  '1 / -1',
+              }}
+            >
+              <div
+                style={{
+                  color: '#6b7280',
+                  fontSize: '13px',
+                }}
+              >
+                Telemetry Summary
+              </div>
+
+              <strong>
+                {telemetry}
+              </strong>
+            </div>
+
+          </div>
+        </div>
+
+
+        {/* CURRENT ACTION */}
+        <div
+          style={{
+            border:
+              '1px solid #d1d5db',
+            borderRadius: '8px',
+            padding: '20px',
+            marginBottom: '20px',
+          }}
+        >
+          <h2
+            style={{
+              margin:
+                '0 0 12px',
+              fontSize: '18px',
+            }}
+          >
             Current Action
           </h2>
 
@@ -175,21 +445,29 @@ export const AtlasActPage = () => {
             }}
           >
             {isExecuting
-              ? 'Drone is executing the approved mission.'
-              : 'Drone is ready and waiting for an approved mission.'}
+              ? 'The assigned unit is executing the approved mission.'
+              : 'The ACT system is ready and waiting for an approved mission.'}
           </p>
         </div>
 
-        {/* Report */}
+
+        {/* REPORT */}
         <div
           style={{
-            border: '1px solid #d1d5db',
+            border:
+              '1px solid #d1d5db',
             borderRadius: '8px',
             padding: '20px',
             marginBottom: '20px',
           }}
         >
-          <h2 style={{ margin: '0 0 12px', fontSize: '18px' }}>
+          <h2
+            style={{
+              margin:
+                '0 0 12px',
+              fontSize: '18px',
+            }}
+          >
             Current Report
           </h2>
 
@@ -200,76 +478,99 @@ export const AtlasActPage = () => {
               lineHeight: '1.6',
             }}
           >
-            The ACT module is connected to the drone system. The
-            dashboard displays the current mission status, progress
-            and approved action information.
+            The ACT module is connected to the
+            backend and displays the current
+            mission, execution state and telemetry
+            information returned by the ATLAS
+            system.
           </p>
         </div>
 
-        {/* History */}
+
+        {/* HISTORY */}
         <div
           style={{
-            border: '1px solid #d1d5db',
+            border:
+              '1px solid #d1d5db',
             borderRadius: '8px',
             padding: '20px',
           }}
         >
-          <h2 style={{ margin: '0 0 15px', fontSize: '18px' }}>
+          <h2
+            style={{
+              margin:
+                '0 0 15px',
+              fontSize: '18px',
+            }}
+          >
             Recent History
           </h2>
 
-          <div
-            style={{
-              padding: '12px 0',
-              borderBottom: '1px solid #e5e7eb',
-            }}
-          >
-            <strong>Drone connected</strong>
-
-            <div
+          {loading ? (
+            <p
               style={{
-                marginTop: '4px',
                 color: '#6b7280',
-                fontSize: '13px',
               }}
             >
-              Drone connection is available to the ATLAS system.
-            </div>
-          </div>
+              Loading ACT history...
+            </p>
+          ) : history.length > 0 ? (
+            history
+              .slice(0, 5)
+              .map((item, index) => (
+                <div
+                  key={
+                    item.mission_id ||
+                    item.id ||
+                    index
+                  }
+                  style={{
+                    padding:
+                      '12px 0',
+                    borderBottom:
+                      index <
+                        Math.min(
+                          history.length,
+                          5
+                        ) - 1
+                        ? '1px solid #e5e7eb'
+                        : 'none',
+                  }}
+                >
+                  <strong>
+                    {item.name ||
+                      item.mission_id ||
+                      'Mission event'}
+                  </strong>
 
-          <div
-            style={{
-              padding: '12px 0',
-              borderBottom: '1px solid #e5e7eb',
-            }}
-          >
-            <strong>Mission status checked</strong>
-
-            <div
+                  <div
+                    style={{
+                      marginTop:
+                        '4px',
+                      color:
+                        '#6b7280',
+                      fontSize:
+                        '13px',
+                    }}
+                  >
+                    {item.execution_status ||
+                      item.stage ||
+                      'Mission status recorded.'}
+                  </div>
+                </div>
+              ))
+          ) : (
+            <p
               style={{
-                marginTop: '4px',
                 color: '#6b7280',
-                fontSize: '13px',
               }}
             >
-              Current mission and execution status were updated.
-            </div>
-          </div>
-
-          <div style={{ padding: '12px 0' }}>
-            <strong>Safety status normal</strong>
-
-            <div
-              style={{
-                marginTop: '4px',
-                color: '#6b7280',
-                fontSize: '13px',
-              }}
-            >
-              No current safety issue is reported.
-            </div>
-          </div>
+              No ACT mission history
+              available.
+            </p>
+          )}
         </div>
+
       </div>
     </div>
   );
