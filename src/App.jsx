@@ -14,44 +14,58 @@ function MainAppLayout() {
   const renderCurrentPage = () => {
     switch (activePage) {
       case 'mission-control':
-        return <MissionControlPage />;
+        return (
+          <MissionControlPage
+            setActivePage={setActivePage}
+          />
+        );
+
       case 'vision-intelligence':
         return <VisionIntelligencePage />;
+
       case 'sensor-network':
         return <SensorNetworkPage />;
+
       case 'core-intelligence':
         return <CoreIntelligencePage />;
+
       case 'atlas-act':
         return <AtlasActPage />;
+
       default:
-        return <MissionControlPage />;
+        return (
+          <MissionControlPage
+            setActivePage={setActivePage}
+          />
+        );
     }
   };
 
   return (
     <div className="app-layout">
-      {/* Fixed / Collapsible Sidebar Navigation */}
-      <Sidebar 
-        activePage={activePage} 
+      <Sidebar
+        activePage={activePage}
         setActivePage={setActivePage}
         isCollapsed={isCollapsed}
         setIsCollapsed={setIsCollapsed}
       />
 
-      {/* Main Content Area */}
       <main className="main-layout-content">
         {renderCurrentPage()}
 
-        <footer style={{
-          marginTop: '2.5rem',
-          textAlign: 'center',
-          fontFamily: 'var(--font-mono)',
-          fontSize: '0.75rem',
-          color: 'var(--text-dim)',
-          paddingTop: '1rem',
-          borderTop: '1px solid rgba(255, 255, 255, 0.05)'
-        }}>
-          ATLAS COMMAND CENTER // AUTONOMOUS OPERATIONAL SYSTEM // UNIFIED DISPATCH PROTOCOL v4.2
+        <footer
+          style={{
+            marginTop: '2.5rem',
+            textAlign: 'center',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '0.75rem',
+            color: 'var(--text-dim)',
+            paddingTop: '1rem',
+            borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+          }}
+        >
+          ATLAS COMMAND CENTER // AUTONOMOUS OPERATIONAL SYSTEM //
+          UNIFIED DISPATCH PROTOCOL v4.2
         </footer>
       </main>
     </div>

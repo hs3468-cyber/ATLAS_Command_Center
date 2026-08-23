@@ -1,385 +1,234 @@
 import React from 'react';
-import { StatusBadge } from '../components/StatusBadge';
-import { EventTimeline } from '../components/EventTimeline';
 import { useAtlasSimulation } from '../context/AtlasSimulationContext';
 
-export const MissionControlPage = () => {
-  const {
-    activeStep,
-    isSimulating,
-    simulationStageName,
-    actMissionProgress,
-    currentCoreDecision,
-    currentModuleStates,
-    eventsList,
-    backendStatus,
-    runLiveBackendDemo,
-    runAtlasDemo,
-    resetSimulation
-  } = useAtlasSimulation();
+export const MissionControlPage = ({ setActivePage }) => {
+  const { currentModuleStates } = useAtlasSimulation();
 
-  const isBackendConnected =
-    backendStatus === 'LIVE STREAM CONNECTED' ||
-    backendStatus === 'API CONNECTED';
+  const modules = [
+    {
+      key: 'vision-intelligence',
+      name: 'VISION',
+      device: 'Camera',
+      description: 'Observation and surveillance system',
+    },
+    {
+      key: 'sensor-network',
+      name: 'SENSE',
+      device: 'Sensors',
+      description: 'Environmental and physical sensor network',
+    },
+    {
+      key: 'core-intelligence',
+      name: 'CORE',
+      device: 'Intelligence',
+      description: 'Information processing and decision system',
+    },
+    {
+      key: 'atlas-act',
+      name: 'ACT',
+      device: 'Drone',
+      description: 'Approved mission and action system',
+    },
+  ];
 
-  const handleDemoClick = () => {
-    if (isBackendConnected) {
-      runLiveBackendDemo();
-    } else {
-      runAtlasDemo();
-    }
+  const getStatus = (key) => {
+    const module = currentModuleStates?.[key];
+
+    if (!module) return 'ONLINE';
+
+    return module.stateSummary || module.status || 'ONLINE';
   };
 
-  const systemState =
-    activeStep === 0
-      ? 'STANDBY'
-      : activeStep >= 4
-        ? 'RESPONDING'
-        : 'ANALYZING';
+  const openModule = (moduleKey) => {
+    setActivePage(moduleKey);
+  };
 
   return (
-    <div className="mission-control-page page-container">
-
-      {/* HEADER */}
-      <section
-        className="glass-panel"
+    <div
+      style={{
+        minHeight: '100vh',
+        background: '#ffffff',
+        color: '#1f2937',
+        padding: '50px 30px',
+        fontFamily: 'Arial, sans-serif',
+      }}
+    >
+      <div
         style={{
-          padding: '28px',
-          borderRadius: '16px',
-          marginBottom: '20px',
-          textAlign: 'center'
+          maxWidth: '1000px',
+          margin: '0 auto',
         }}
       >
-        <div
-          style={{
-            fontSize: '12px',
-            letterSpacing: '0.15em',
-            color: '#00f2fe',
-            marginBottom: '8px'
-          }}
-        >
-          ATLAS COMMAND CENTER
-        </div>
-
-        <h1
-          style={{
-            margin: 0,
-            fontSize: '32px',
-            letterSpacing: '0.04em'
-          }}
-        >
-          SEE. SENSE. THINK. ACT.
-        </h1>
-
-        <p
-          style={{
-            margin: '10px auto 18px',
-            maxWidth: '650px',
-            color: '#94a3b8',
-            fontSize: '14px'
-          }}
-        >
-          One ecosystem connecting observation, sensing, intelligence
-          and approved action.
-        </p>
-
-        <StatusBadge
-          status={
-            activeStep === 0
-              ? 'ONLINE'
-              : activeStep >= 4
-                ? 'RESPONDING'
-                : 'INVESTIGATING'
-          }
-          customText={`SYSTEM ${systemState}`}
-        />
-      </section>
-
-      {/* SIMPLE DEMO CONTROL */}
-      <section
-        className="glass-panel"
-        style={{
-          padding: '18px',
-          borderRadius: '14px',
-          marginBottom: '20px',
-          display: 'flex',
-          justifyContent: 'center',
-          gap: '12px',
-          flexWrap: 'wrap'
-        }}
-      >
-        <button
-          onClick={handleDemoClick}
-          disabled={isSimulating}
-          style={{
-            padding: '13px 24px',
-            border: 'none',
-            borderRadius: '9px',
-            background: '#00f2fe',
-            color: '#07111f',
-            fontWeight: 800,
-            cursor: isSimulating ? 'not-allowed' : 'pointer'
-          }}
-        >
-          {isSimulating ? 'ATLAS IS WORKING...' : '▶ RUN ATLAS DEMO'}
-        </button>
-
-        <button
-          onClick={resetSimulation}
-          disabled={isSimulating}
-          style={{
-            padding: '13px 20px',
-            borderRadius: '9px',
-            background: 'rgba(255,255,255,0.05)',
-            color: '#cbd5e1',
-            border: '1px solid rgba(255,255,255,0.1)',
-            cursor: isSimulating ? 'not-allowed' : 'pointer'
-          }}
-        >
-          RESET
-        </button>
-      </section>
-
-      {/* WHAT IS ATLAS DOING? */}
-      <section
-        className="glass-panel"
-        style={{
-          padding: '24px',
-          borderRadius: '16px',
-          marginBottom: '20px'
-        }}
-      >
-        <h2
-          style={{
-            marginTop: 0,
-            fontSize: '18px',
-            textAlign: 'center'
-          }}
-        >
-          WHAT IS ATLAS DOING RIGHT NOW?
-        </h2>
-
+        {/* HEADER */}
         <div
           style={{
             textAlign: 'center',
-            padding: '18px',
-            margin: '18px 0',
-            borderRadius: '10px',
-            background: 'rgba(15,23,42,0.65)'
+            marginBottom: '45px',
           }}
         >
-          <div
+          <h1
             style={{
-              color: '#00f2fe',
-              fontSize: '12px',
-              letterSpacing: '0.08em',
-              marginBottom: '8px'
+              margin: 0,
+              fontSize: '32px',
+              fontWeight: 600,
+              color: '#111827',
             }}
           >
-            CURRENT ACTIVITY
-          </div>
+            ATLAS Command Center
+          </h1>
+
+          <p
+            style={{
+              margin: '10px 0 18px',
+              fontSize: '16px',
+              color: '#6b7280',
+            }}
+          >
+            Connected device and system overview
+          </p>
 
           <div
             style={{
-              fontSize: '20px',
-              fontWeight: 700
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 16px',
+              border: '1px solid #d1d5db',
+              borderRadius: '20px',
+              background: '#f9fafb',
+              fontSize: '14px',
+              color: '#374151',
             }}
           >
-            {simulationStageName || 'Monitoring the environment'}
+            <span
+              style={{
+                width: '9px',
+                height: '9px',
+                borderRadius: '50%',
+                background: '#22c55e',
+              }}
+            />
+
+            System Online
           </div>
         </div>
 
-        {/* SIMPLE FLOW */}
+        {/* FOUR MODULES */}
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '12px'
+            gridTemplateColumns: 'repeat(2, minmax(280px, 1fr))',
+            gap: '24px',
           }}
         >
-          {[
-            ['👁', 'VISION', 'SEE', '#00f2fe', currentModuleStates.vision],
-            ['📡', 'SENSE', 'SENSE', '#10b981', currentModuleStates.sense],
-            ['🧠', 'CORE', 'THINK', '#8b5cf6', currentModuleStates.core],
-            ['🚁', 'ACT', 'ACT', '#f59e0b', currentModuleStates.act]
-          ].map(([icon, name, role, color, module]) => (
+          {modules.map((module) => (
             <div
-              key={name}
+              key={module.key}
               style={{
-                padding: '18px 12px',
-                borderRadius: '12px',
-                textAlign: 'center',
-                background: 'rgba(15,23,42,0.65)',
-                borderTop: `3px solid ${color}`
+                border: '1px solid #d1d5db',
+                borderRadius: '10px',
+                padding: '28px',
+                background: '#ffffff',
               }}
             >
-              <div style={{ fontSize: '25px' }}>{icon}</div>
-
               <div
                 style={{
-                  color,
-                  fontWeight: 800,
-                  marginTop: '6px'
+                  fontSize: '13px',
+                  color: '#6b7280',
+                  marginBottom: '8px',
                 }}
               >
-                {name}
+                CONNECTED DEVICE
               </div>
 
-              <div
+              <h2
                 style={{
-                  fontSize: '11px',
-                  color: '#64748b',
-                  marginTop: '3px'
+                  margin: 0,
+                  fontSize: '25px',
+                  fontWeight: 600,
+                  color: '#111827',
                 }}
               >
-                {role}
-              </div>
+                {module.name}
+              </h2>
 
               <div
                 style={{
-                  fontSize: '11px',
-                  color: '#cbd5e1',
-                  marginTop: '10px'
+                  marginTop: '5px',
+                  fontSize: '16px',
+                  color: '#374151',
                 }}
               >
-                {module?.stateSummary || 'Ready'}
+                {module.device}
+              </div>
+
+              <p
+                style={{
+                  margin: '15px 0',
+                  color: '#6b7280',
+                  fontSize: '14px',
+                  lineHeight: '1.5',
+                  minHeight: '42px',
+                }}
+              >
+                {module.description}
+              </p>
+
+              <div
+                style={{
+                  borderTop: '1px solid #e5e7eb',
+                  paddingTop: '15px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '15px',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: '14px',
+                    color: '#374151',
+                  }}
+                >
+                  Status:{' '}
+                  <strong>{getStatus(module.key)}</strong>
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => openModule(module.key)}
+                  style={{
+                    background: '#111827',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '6px',
+                    padding: '9px 15px',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  View Details
+                </button>
               </div>
             </div>
           ))}
         </div>
-      </section>
 
-      {/* CURRENT UNDERSTANDING */}
-      <section
-        className="glass-panel"
-        style={{
-          padding: '24px',
-          borderRadius: '16px',
-          marginBottom: '20px'
-        }}
-      >
-        <h2 style={{ marginTop: 0, fontSize: '18px' }}>
-          ATLAS UNDERSTANDING
-        </h2>
-
+        {/* FOOTER */}
         <div
           style={{
-            display: 'grid',
-            gap: '10px'
+            textAlign: 'center',
+            marginTop: '35px',
+            paddingTop: '20px',
+            borderTop: '1px solid #e5e7eb',
+            color: '#6b7280',
+            fontSize: '13px',
           }}
         >
-          <div
-            style={{
-              padding: '14px',
-              borderRadius: '9px',
-              background: 'rgba(15,23,42,0.65)'
-            }}
-          >
-            <strong style={{ color: '#00f2fe' }}>
-              WHAT WAS OBSERVED?
-            </strong>
-            <div style={{ marginTop: '5px', color: '#cbd5e1' }}>
-              {currentCoreDecision.inputReceived}
-            </div>
-          </div>
-
-          <div
-            style={{
-              padding: '14px',
-              borderRadius: '9px',
-              background: 'rgba(15,23,42,0.65)'
-            }}
-          >
-            <strong style={{ color: '#10b981' }}>
-              WHAT CONTEXT WAS FOUND?
-            </strong>
-            <div style={{ marginTop: '5px', color: '#cbd5e1' }}>
-              {currentCoreDecision.context}
-            </div>
-          </div>
-
-          <div
-            style={{
-              padding: '14px',
-              borderRadius: '9px',
-              background: 'rgba(15,23,42,0.65)'
-            }}
-          >
-            <strong style={{ color: '#8b5cf6' }}>
-              WHAT DID ATLAS DECIDE?
-            </strong>
-            <div
-              style={{
-                marginTop: '5px',
-                color: '#f8fafc',
-                fontWeight: 700
-              }}
-            >
-              {currentCoreDecision.decision}
-            </div>
-          </div>
+          ATLAS connects observation, sensing, intelligence and
+          approved action in one system.
         </div>
-      </section>
-
-      {/* ACTION */}
-      <section
-        className="glass-panel"
-        style={{
-          padding: '24px',
-          borderRadius: '16px',
-          marginBottom: '20px',
-          textAlign: 'center'
-        }}
-      >
-        <h2 style={{ marginTop: 0, fontSize: '18px' }}>
-          CURRENT ACTION
-        </h2>
-
-        <div
-          style={{
-            fontSize: '24px',
-            fontWeight: 800,
-            color: '#f59e0b',
-            marginBottom: '10px'
-          }}
-        >
-          {activeStep >= 4
-            ? 'APPROVED MISSION'
-            : 'NO ACTION REQUIRED YET'}
-        </div>
-
-        <div style={{ color: '#94a3b8', fontSize: '13px' }}>
-          Mission progress: {actMissionProgress}%
-        </div>
-      </section>
-
-      {/* EVENT TIMELINE */}
-      <section
-        className="glass-panel"
-        style={{
-          padding: '20px',
-          borderRadius: '16px'
-        }}
-      >
-        <h2 style={{ marginTop: 0, fontSize: '18px' }}>
-          LIVE EVENT STORY
-        </h2>
-
-        <p
-          style={{
-            color: '#94a3b8',
-            fontSize: '13px'
-          }}
-        >
-          Follow how information moves through ATLAS.
-        </p>
-
-        <EventTimeline
-          events={eventsList}
-          activeStep={activeStep}
-        />
-      </section>
-
+      </div>
     </div>
   );
 };
