@@ -295,7 +295,7 @@ app = FastAPI(
 # ---------------------------------------------------------
 # CORS Configuration
 # ---------------------------------------------------------
-# Local development + deployed Render frontend
+# Supports local development and any Render deployment domain
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -306,7 +306,10 @@ app.add_middleware(
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "https://atlas-command-center-1.onrender.com",
+        "https://atlas-command-center-backend.onrender.com",
+        "https://atlas-command-center-bkww.onrender.com",
     ],
+    allow_origin_regex=r"https://.*\.onrender\.com|http://(localhost|127\.0\.0\.1):\d+",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

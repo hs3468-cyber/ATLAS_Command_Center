@@ -82,6 +82,9 @@ export const VisionIntelligencePage = () => {
             ? 'LIVE // 1080P 60FPS'
             : 'OFFLINE')
         );
+
+        // Refresh state from backend
+        await loadVisionData();
       } else {
         console.error(
           '[VISION] Backend update failed:',

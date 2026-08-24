@@ -1,4 +1,5 @@
-from typing import List
+from typing import List, Optional
+from pydantic import BaseModel
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -20,10 +21,11 @@ router = APIRouter(
 # The user controls this state from the dashboard.
 # True  = Camera ON
 # False = Camera OFF
-#
-# Kept simple for the hackathon. Later, this can be
-# connected to the actual OS/device.
 vision_enabled = True
+
+
+class VisionStatusUpdate(BaseModel):
+    enabled: Optional[bool] = None
 
 
 def detection_to_dict(model: VisionDetectionModel) -> dict:
@@ -78,10 +80,18 @@ def get_vision_status(
 # PUT Vision ON / OFF
 # ---------------------------------------------------------
 @router.put("/status")
-def update_vision_status(enabled: bool):
+def update_vision_status(
+    enabled: Optional[bool] = None,
+    body: Optional[VisionStatusUpdate] = None
+):
     global vision_enabled
 
-    vision_enabled = enabled
+    if enabled is not None:
+        vision_enabled = enabled
+    elif body and body.enabled is not None:
+        vision_enabled = body.enabled
+    else:
+        vision_enabled = not vision_enabled
 
     return {
         "success": True,

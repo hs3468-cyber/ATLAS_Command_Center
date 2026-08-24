@@ -1,11 +1,25 @@
 /**
  * ATLAS Command Center — WebSocket Live Event Integration Service
- * Configured via VITE_WS_URL environment variable.
+ * Configured via VITE_WS_URL environment variable with Render production fallback.
  */
+
+const getWsUrl = () => {
+  if (import.meta.env.VITE_WS_URL) {
+    return import.meta.env.VITE_WS_URL;
+  }
+  if (
+    typeof window !== 'undefined' &&
+    window.location.hostname !== 'localhost' &&
+    window.location.hostname !== '127.0.0.1'
+  ) {
+    return 'wss://atlas-command-center-backend.onrender.com/ws/events';
+  }
+  return 'ws://127.0.0.1:8000/ws/events';
+};
 
 class AtlasWebSocketService {
   constructor() {
-    this.wsUrl = import.meta.env.VITE_WS_URL || '';
+    this.wsUrl = getWsUrl();
     this.socket = null;
     this.status = 'DISCONNECTED'; // DISCONNECTED, CONNECTING, CONNECTED, OFFLINE
     this.listeners = new Set();
