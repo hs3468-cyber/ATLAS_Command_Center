@@ -1,6 +1,34 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, Float, Index
+from sqlalchemy import Column, Integer, String, Text, DateTime, Float, Boolean, Index
 from datetime import datetime, timezone
 from app.database import Base
+
+class UserModel(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    username = Column(String(100), unique=True, index=True, nullable=False)
+    password_hash = Column(String(200), nullable=False)
+    role = Column(String(50), nullable=False, default="USER") # ADMIN, USER
+    name = Column(String(100), nullable=False, default="Authorized User")
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    __table_args__ = (
+        Index("idx_users_username", "username"),
+        Index("idx_users_role", "role"),
+    )
+
+class DroneConfigModel(Base):
+    __tablename__ = "drone_config"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    emergency_alert = Column(Boolean, default=True)
+    unknown_intruder = Column(Boolean, default=True)
+    theft_detection = Column(Boolean, default=True)
+    health_emergency = Column(Boolean, default=False)
+    operational_status = Column(String(100), default="SIMULATED // READY")
+    battery_status = Column(Integer, default=92)
+    last_activation = Column(String(100), default="10:51:02 UTC")
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 class EventModel(Base):
     __tablename__ = "events"

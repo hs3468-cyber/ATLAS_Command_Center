@@ -1,24 +1,32 @@
 import React, { useState } from 'react';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { AtlasSimulationProvider } from './context/AtlasSimulationContext';
 import { Sidebar } from './components/Sidebar';
+import { Databot } from './components/Databot';
+import { LoginPage } from './pages/LoginPage';
 import { MissionControlPage } from './pages/MissionControlPage';
 import { VisionIntelligencePage } from './pages/VisionIntelligencePage';
 import { SensorNetworkPage } from './pages/SensorNetworkPage';
 import { CoreIntelligencePage } from './pages/CoreIntelligencePage';
 import { AtlasActPage } from './pages/AtlasActPage';
+import { EvidenceRecordingsPage } from './pages/EvidenceRecordingsPage';
+import { DroneSetupPage } from './pages/DroneSetupPage';
+import { UserManagementPage } from './pages/UserManagementPage';
 
-function MainAppLayout() {
+function MainAppContent() {
+  const { isAuthenticated, isAdmin, isUser } = useAuth();
   const [activePage, setActivePage] = useState('mission-control');
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // Unauthenticated -> Show Common Login Landing Page
+  if (!isAuthenticated) {
+    return <LoginPage />;
+  }
 
   const renderCurrentPage = () => {
     switch (activePage) {
       case 'mission-control':
-        return (
-          <MissionControlPage
-            setActivePage={setActivePage}
-          />
-        );
+        return <MissionControlPage setActivePage={setActivePage} />;
 
       case 'vision-intelligence':
         return <VisionIntelligencePage />;
@@ -30,14 +38,19 @@ function MainAppLayout() {
         return <CoreIntelligencePage />;
 
       case 'atlas-act':
-        return <AtlasActPage />;
+        return <AtlasActPage setActivePage={setActivePage} />;
+
+      case 'evidence-recordings':
+        return <EvidenceRecordingsPage setActivePage={setActivePage} />;
+
+      case 'drone-setup':
+        return isAdmin ? <DroneSetupPage /> : <MissionControlPage setActivePage={setActivePage} />;
+
+      case 'user-management':
+        return isAdmin ? <UserManagementPage /> : <MissionControlPage setActivePage={setActivePage} />;
 
       default:
-        return (
-          <MissionControlPage
-            setActivePage={setActivePage}
-          />
-        );
+        return <MissionControlPage setActivePage={setActivePage} />;
     }
   };
 
@@ -68,14 +81,19 @@ function MainAppLayout() {
           UNIFIED DISPATCH PROTOCOL v4.2
         </footer>
       </main>
+
+      {/* Floating Databot Help Assistant */}
+      <Databot />
     </div>
   );
 }
 
 export default function App() {
   return (
-    <AtlasSimulationProvider>
-      <MainAppLayout />
-    </AtlasSimulationProvider>
+    <AuthProvider>
+      <AtlasSimulationProvider>
+        <MainAppContent />
+      </AtlasSimulationProvider>
+    </AuthProvider>
   );
 }

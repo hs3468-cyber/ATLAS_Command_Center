@@ -1,4 +1,5 @@
 import React from 'react';
+import { useAuth } from '../context/AuthContext';
 import { 
   LayoutDashboard, 
   Eye, 
@@ -7,7 +8,12 @@ import {
   Zap, 
   ChevronLeft, 
   ChevronRight,
-  Shield
+  Shield,
+  Video,
+  Settings,
+  Users,
+  LogOut,
+  UserCheck
 } from 'lucide-react';
 
 export const Sidebar = ({ 
@@ -16,13 +22,21 @@ export const Sidebar = ({
   isCollapsed, 
   setIsCollapsed 
 }) => {
-  const navItems = [
-    { id: 'mission-control', label: 'Mission Control', icon: LayoutDashboard, accent: '#00f2fe' },
-    { id: 'vision-intelligence', label: 'Vision Intelligence', icon: Eye, accent: '#00f2fe' },
-    { id: 'sensor-network', label: 'Sensor Network', icon: Radio, accent: '#10b981' },
-    { id: 'core-intelligence', label: 'Core Intelligence', icon: Brain, accent: '#8b5cf6' },
-    { id: 'atlas-act', label: 'ATLAS Act', icon: Zap, accent: '#f59e0b' }
+  const { user, isAdmin, isUser, logout } = useAuth();
+
+  const allNavItems = [
+    { id: 'mission-control', label: 'Mission Control', icon: LayoutDashboard, accent: '#00f2fe', concept: 'STATUS', roles: ['ADMIN', 'USER'] },
+    { id: 'vision-intelligence', label: 'Vision Intelligence', icon: Eye, accent: '#00f2fe', concept: 'VISION', roles: ['ADMIN', 'USER'] },
+    { id: 'sensor-network', label: 'Sensor Network', icon: Radio, accent: '#10b981', concept: 'SENSE', roles: ['ADMIN', 'USER'] },
+    { id: 'core-intelligence', label: 'Core Intelligence', icon: Brain, accent: '#8b5cf6', concept: 'CORE', roles: ['ADMIN', 'USER'] },
+    { id: 'atlas-act', label: 'ATLAS Act', icon: Zap, accent: '#f59e0b', concept: 'ACT', roles: ['ADMIN', 'USER'] },
+    { id: 'evidence-recordings', label: 'Evidence & Clips', icon: Video, accent: '#ef4444', concept: 'EVIDENCE', roles: ['ADMIN', 'USER'] },
+    { id: 'drone-setup', label: 'Drone Activation Setup', icon: Settings, accent: '#f59e0b', concept: 'SETUP', roles: ['ADMIN'] },
+    { id: 'user-management', label: 'User Management', icon: Users, accent: '#3b82f6', concept: 'USERS', roles: ['ADMIN'] },
   ];
+
+  const userRole = user?.role || 'USER';
+  const navItems = allNavItems.filter(item => item.roles.includes(userRole));
 
   return (
     <aside className={`sidebar-container glass-panel ${isCollapsed ? 'collapsed' : ''}`}>
@@ -31,7 +45,12 @@ export const Sidebar = ({
           <div className="brand-icon">
             <Shield size={20} />
           </div>
-          {!isCollapsed && <span className="brand-text font-header">ATLAS</span>}
+          {!isCollapsed && (
+            <div>
+              <span className="brand-text font-header" style={{ display: 'block', lineHeight: 1 }}>ATLAS</span>
+              <span style={{ fontSize: '0.6rem', color: 'var(--text-dim)', letterSpacing: '0.05em' }}>WOMEN SAFETY & SURVEILLANCE</span>
+            </div>
+          )}
         </div>
         <button 
           className="toggle-sidebar-btn" 
@@ -66,16 +85,52 @@ export const Sidebar = ({
 
       <div className="sidebar-footer">
         {!isCollapsed && (
-          <div className="sidebar-status-box">
-            <span className="font-mono" style={{ fontSize: '0.65rem', color: 'var(--text-dim)' }}>
-              MATRIX STATUS
-            </span>
-            <div className="font-mono" style={{ fontSize: '0.75rem', color: 'var(--emerald-bright)' }}>
-              ● 100% NOMINAL
+          <div className="sidebar-status-box" style={{ padding: '10px 12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+              <span className="font-mono" style={{ fontSize: '0.7rem', fontWeight: 'bold', color: '#111827' }}>
+                {user?.name || 'Authorized User'}
+              </span>
+              <span
+                style={{
+                  fontSize: '0.6rem',
+                  fontWeight: 700,
+                  padding: '2px 6px',
+                  borderRadius: '3px',
+                  background: isAdmin ? '#fef3c7' : '#e0f2fe',
+                  color: isAdmin ? '#92400e' : '#0369a1',
+                }}
+              >
+                {userRole}
+              </span>
             </div>
+
+            <button
+              type="button"
+              onClick={logout}
+              style={{
+                width: '100%',
+                background: '#111827',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '4px',
+                padding: '6px',
+                fontSize: '0.7rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '4px',
+                marginTop: '4px',
+              }}
+            >
+              <LogOut size={12} /> LOG OUT
+            </button>
           </div>
         )}
       </div>
     </aside>
   );
 };
+
+export default Sidebar;

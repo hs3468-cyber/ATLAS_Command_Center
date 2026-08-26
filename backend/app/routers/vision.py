@@ -5,8 +5,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import VisionDetectionModel
+from app.models import VisionDetectionModel, UserModel
 from app.schemas import VisionStatusResponse, VisionDetectionResponse
+from app.routers.auth import require_admin
 
 
 router = APIRouter(
@@ -77,12 +78,13 @@ def get_vision_status(
 
 
 # ---------------------------------------------------------
-# PUT Vision ON / OFF
+# PUT Vision ON / OFF (ADMIN ONLY)
 # ---------------------------------------------------------
 @router.put("/status")
 def update_vision_status(
     enabled: Optional[bool] = None,
-    body: Optional[VisionStatusUpdate] = None
+    body: Optional[VisionStatusUpdate] = None,
+    admin: UserModel = Depends(require_admin)
 ):
     global vision_enabled
 

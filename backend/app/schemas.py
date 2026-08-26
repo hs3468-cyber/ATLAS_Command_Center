@@ -1,6 +1,61 @@
 from pydantic import BaseModel, Field
 from typing import Literal, Dict, Any, Optional, List
 
+# Auth & User Management Schemas
+class UserLoginRequest(BaseModel):
+    username: str = Field(..., description="User login username")
+    password: str = Field(..., description="User login password")
+
+class UserResponse(BaseModel):
+    id: int
+    username: str
+    role: str = Field(..., description="Role: ADMIN or USER")
+    name: str
+    created_at: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class UserLoginResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse
+
+class UserCreateRequest(BaseModel):
+    username: str = Field(..., description="New username")
+    password: str = Field(..., description="New password")
+    role: Literal['ADMIN', 'USER'] = Field('USER', description="Assigned role")
+    name: str = Field(..., description="Full display name")
+
+# Drone Activation Setup Schemas
+class DroneConfigSchema(BaseModel):
+    emergency_alert: bool = Field(True, description="Trigger drone on emergency alert")
+    unknown_intruder: bool = Field(True, description="Trigger drone on unknown intruder")
+    theft_detection: bool = Field(True, description="Trigger drone on theft activity")
+    health_emergency: bool = Field(False, description="Trigger drone on health emergency")
+    operational_status: str = Field("SIMULATED // READY", description="Drone status label")
+    battery_status: int = Field(92, description="Battery percentage")
+    last_activation: str = Field("10:51:02 UTC", description="Last activation timestamp")
+
+    class Config:
+        from_attributes = True
+
+class DroneConfigUpdateRequest(BaseModel):
+    emergency_alert: Optional[bool] = None
+    unknown_intruder: Optional[bool] = None
+    theft_detection: Optional[bool] = None
+    health_emergency: Optional[bool] = None
+
+# Databot Help Assistant Schemas
+class DatabotChatRequest(BaseModel):
+    message: str = Field(..., description="User question or prompt for Databot")
+
+class DatabotChatResponse(BaseModel):
+    reply: str = Field(..., description="Databot helpful answer")
+    timestamp: str
+    suggested_topics: List[str] = Field(default_factory=list)
+
+# Existing Event Schemas
 class AtlasEventCreate(BaseModel):
     id: str = Field(..., description="Unique event identifier (e.g. EVT-101)")
     timestamp: str = Field(..., description="ISO timestamp string")

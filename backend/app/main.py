@@ -12,9 +12,11 @@ from app.models import (
     CoreDecisionModel,
     VisionDetectionModel,
     SensorNodeModel,
-    ActMissionHistoryModel
+    ActMissionHistoryModel,
+    UserModel,
+    DroneConfigModel
 )
-from app.routers import system, events, core, vision, sensors, act
+from app.routers import system, events, core, vision, sensors, act, auth, users, drone, databot
 from app.websocket_manager import ws_manager
 
 
@@ -26,6 +28,42 @@ def seed_sample_data():
     db = SessionLocal()
 
     try:
+        # Seed Default Users
+        if db.query(UserModel).count() == 0:
+            logger.info("Initializing SQLite database with default Admin and User accounts...")
+            sample_users = [
+                UserModel(
+                    username="admin",
+                    password_hash=auth.hash_password("admin123"),
+                    role="ADMIN",
+                    name="System Administrator"
+                ),
+                UserModel(
+                    username="user",
+                    password_hash=auth.hash_password("user123"),
+                    role="USER",
+                    name="Family Member (Authorized User)"
+                )
+            ]
+            for u in sample_users:
+                db.add(u)
+            db.commit()
+
+        # Seed Default Drone Config
+        if db.query(DroneConfigModel).count() == 0:
+            logger.info("Initializing Drone Activation Setup default configuration...")
+            default_drone = DroneConfigModel(
+                emergency_alert=True,
+                unknown_intruder=True,
+                theft_detection=True,
+                health_emergency=False,
+                operational_status="SIMULATED // READY",
+                battery_status=92,
+                last_activation="10:51:02 UTC"
+            )
+            db.add(default_drone)
+            db.commit()
+
         # Seed Baseline Events
         if db.query(EventModel).count() == 0:
             logger.info(
@@ -37,8 +75,8 @@ def seed_sample_data():
                     "event_id": "EVT-101",
                     "timestamp": "10:50:54 UTC",
                     "source": "VISION",
-                    "event_type": "PERSON_DETECTED",
-                    "message": "Person detected @ Sector 7 perimeter line",
+                    "event_type": "UNKNOWN_PERSON_ENTERED",
+                    "message": "Unknown person detected @ Sector 7 perimeter line",
                     "status": "COMPLETED",
                     "data_json": json.dumps({
                         "target": "ATLAS-P001",
@@ -61,7 +99,7 @@ def seed_sample_data():
                     "event_id": "EVT-103",
                     "timestamp": "10:50:58 UTC",
                     "source": "CORE",
-                    "event_type": "CONTEXT_EVALUATION",
+                    "event_type": "SAFETY_ASSESSMENT",
                     "message": "Evaluating historical clearance parameters & multi-layered risk model",
                     "status": "COMPLETED",
                     "data_json": json.dumps({
@@ -261,7 +299,7 @@ def seed_sample_data():
             db.commit()
 
         logger.info(
-            "All 5 ATLAS backend module baseline tables initialized & seeded successfully."
+            "All 5 ATLAS backend module baseline tables & user accounts initialized successfully."
         )
 
     except Exception as e:
@@ -285,9 +323,9 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="ATLAS Command Center Backend",
+    title="ATLAS Command Center Backend — Women Safety & Surveillance Platform",
     description="FastAPI REST API & WebSocket Backend Service for ATLAS Command Center",
-    version="1.3.0",
+    version="2.0.0",
     lifespan=lifespan
 )
 
@@ -319,6 +357,10 @@ app.add_middleware(
 # ---------------------------------------------------------
 # Include Routers
 # ---------------------------------------------------------
+app.include_router(auth.router)
+app.include_router(users.router)
+app.include_router(drone.router)
+app.include_router(databot.router)
 app.include_router(system.router)
 app.include_router(events.router)
 app.include_router(core.router)

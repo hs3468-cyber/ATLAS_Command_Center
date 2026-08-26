@@ -4,7 +4,7 @@
  * Frontend <-> FastAPI Backend
  *
  * Local development:
- * VITE_API_BASE_URL=http://127.0.0.1:8000
+ * VITE_API_BASE_URL=http://127.0.0.1:8001
  *
  * Production Render Deployment:
  * VITE_API_BASE_URL=https://atlas-command-center-backend.onrender.com
@@ -21,33 +21,40 @@ const getBackendUrl = () => {
   ) {
     return 'https://atlas-command-center-backend.onrender.com';
   }
-  return 'http://127.0.0.1:8000';
+  return 'http://127.0.0.1:8001';
 };
 
 const API_BASE_URL = getBackendUrl();
 
-
 /**
  * Generic HTTP request helper
  */
-async function safeFetch(endpoint, options = {}) {
+async function safeFetch(endpoint, options = {}, token = null) {
   try {
     const url =
       `${API_BASE_URL.replace(/\/$/, '')}/` +
       `${endpoint.replace(/^\//, '')}`;
 
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    };
+
+    const authToken = token || localStorage.getItem('atlas_token');
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`;
+      headers['X-Atlas-Token'] = authToken;
+    }
+
     const response = await fetch(url, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...(options.headers || {}),
-      },
       ...options,
+      headers,
     });
 
     if (!response.ok) {
-      throw new Error(
-        `HTTP ${response.status}: ${response.statusText}`
-      );
+      const errJson = await response.json().catch(() => ({}));
+      const msg = errJson.detail || `HTTP ${response.status}: ${response.statusText}`;
+      throw new Error(msg);
     }
 
     const data = await response.json();
@@ -59,7 +66,7 @@ async function safeFetch(endpoint, options = {}) {
     };
   } catch (error) {
     console.warn(
-      `[ATLAS API] ${endpoint} unreachable:`,
+      `[ATLAS API] ${endpoint} unreachable or rejected:`,
       error.message
     );
 
@@ -71,7 +78,6 @@ async function safeFetch(endpoint, options = {}) {
   }
 }
 
-
 export const apiService = {
 
   // --------------------------------------------------
@@ -81,6 +87,54 @@ export const apiService = {
   getBaseUrl: () => API_BASE_URL,
 
   isConfigured: () => Boolean(API_BASE_URL),
+
+
+  // --------------------------------------------------
+  // AUTHENTICATION & USER MANAGEMENT
+  // --------------------------------------------------
+
+  login: (username, password) =>
+    safeFetch('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
+    }),
+
+  getMe: (token) =>
+    safeFetch('/api/auth/me', { method: 'GET' }, token),
+
+  getUsers: (token) =>
+    safeFetch('/api/users', { method: 'GET' }, token),
+
+  createUser: (userData, token) =>
+    safeFetch('/api/users', {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    }, token),
+
+
+  // --------------------------------------------------
+  // DRONE ACTIVATION SETUP (ADMIN ONLY)
+  // --------------------------------------------------
+
+  getDroneConfig: (token) =>
+    safeFetch('/api/drone/config', { method: 'GET' }, token),
+
+  updateDroneConfig: (configData, token) =>
+    safeFetch('/api/drone/config', {
+      method: 'POST',
+      body: JSON.stringify(configData),
+    }, token),
+
+
+  // --------------------------------------------------
+  // DATABOT HELP ASSISTANT
+  // --------------------------------------------------
+
+  askDatabot: (message) =>
+    safeFetch('/api/databot/chat', {
+      method: 'POST',
+      body: JSON.stringify({ message }),
+    }),
 
 
   // --------------------------------------------------
@@ -139,12 +193,6 @@ export const apiService = {
       `/api/vision/detections/${encodeURIComponent(subjectId)}`
     ),
 
-  /**
-   * User-controlled Vision ON/OFF
-   *
-   * enabled = true  -> camera ON
-   * enabled = false -> camera OFF
-   */
   updateVisionStatus: (enabled) =>
     safeFetch(
       `/api/vision/status?enabled=${Boolean(enabled)}`,
@@ -210,6 +258,5 @@ export const apiService = {
   getActHistory: () =>
     safeFetch('/api/act/history'),
 };
-
 
 export default apiService;

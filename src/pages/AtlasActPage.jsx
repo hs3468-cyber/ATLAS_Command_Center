@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import apiService from '../services/apiService';
+import { useAuth } from '../context/AuthContext';
+import { Settings } from 'lucide-react';
 
-export const AtlasActPage = () => {
+export const AtlasActPage = ({ setActivePage }) => {
+  const { isAdmin } = useAuth();
   const [actStatus, setActStatus] = useState(null);
   const [mission, setMission] = useState(null);
   const [history, setHistory] = useState([]);
@@ -125,29 +128,58 @@ export const AtlasActPage = () => {
               '1px solid #e5e7eb',
             paddingBottom: '20px',
             marginBottom: '25px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '15px',
           }}
         >
-          <h1
-            style={{
-              margin: 0,
-              fontSize: '30px',
-              fontWeight: 600,
-              color: '#111827',
-            }}
-          >
-            ACT
-          </h1>
+          <div>
+            <h1
+              style={{
+                margin: 0,
+                fontSize: '30px',
+                fontWeight: 600,
+                color: '#111827',
+              }}
+            >
+              ACT
+            </h1>
 
-          <p
-            style={{
-              marginTop: '7px',
-              color: '#6b7280',
-              fontSize: '15px',
-            }}
-          >
-            Drone status, mission and approved
-            action information
-          </p>
+            <p
+              style={{
+                marginTop: '7px',
+                color: '#6b7280',
+                fontSize: '15px',
+              }}
+            >
+              Drone status, mission and approved
+              action information
+            </p>
+          </div>
+
+          {isAdmin && setActivePage && (
+            <button
+              type="button"
+              onClick={() => setActivePage('drone-setup')}
+              style={{
+                background: '#111827',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '6px',
+                padding: '10px 18px',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+              }}
+            >
+              <Settings size={16} /> DRONE ACTIVATION SETUP
+            </button>
+          )}
         </div>
 
 
