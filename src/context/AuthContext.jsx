@@ -32,6 +32,13 @@ export const AuthProvider = ({ children }) => {
     }
   }, [token]);
 
+  const completeLogin = (authUser, authToken) => {
+    setToken(authToken);
+    setUser(authUser);
+    localStorage.setItem('atlas_token', authToken);
+    localStorage.setItem('atlas_user', JSON.stringify(authUser));
+  };
+
   const login = async (username, password) => {
     setLoading(true);
     try {
@@ -40,14 +47,8 @@ export const AuthProvider = ({ children }) => {
         const authToken = res.data.access_token;
         const authUser = res.data.user;
 
-        setToken(authToken);
-        setUser(authUser);
-
-        localStorage.setItem('atlas_token', authToken);
-        localStorage.setItem('atlas_user', JSON.stringify(authUser));
-
         setLoading(false);
-        return { success: true, user: authUser };
+        return { success: true, user: authUser, token: authToken };
       } else {
         setLoading(false);
         return {
@@ -82,6 +83,7 @@ export const AuthProvider = ({ children }) => {
         isAdmin,
         isUser,
         login,
+        completeLogin,
         logout
       }}
     >

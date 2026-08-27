@@ -152,7 +152,10 @@ export const Databot = () => {
                 <Bot size={20} />
               </div>
               <div>
-                <div style={{ fontSize: '14px', fontWeight: 700 }}>ATLAS Databot</div>
+                <div style={{ fontSize: '14px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  ATLAS Databot
+                  <span style={{ fontSize: '10px', background: '#374151', color: '#60a5fa', padding: '2px 6px', borderRadius: '10px', fontWeight: 600 }}>⚡ ATLAS AI</span>
+                </div>
                 <div style={{ fontSize: '11px', color: '#9ca3af' }}>Women Safety & System Assistant</div>
               </div>
             </div>
@@ -222,7 +225,7 @@ export const Databot = () => {
 
             {loading && (
               <div style={{ alignSelf: 'flex-start', color: '#6b7280', fontSize: '12px', fontStyle: 'italic' }}>
-                Databot is analyzing...
+                ATLAS AI is analyzing operational context...
               </div>
             )}
           </div>
@@ -239,9 +242,10 @@ export const Databot = () => {
             }}
           >
             {[
-              'Camera status?',
-              'Safety alerts?',
-              'Drone setup?',
+              'Current system status',
+              'Explain latest event',
+              'Camera status',
+              'Current mission',
               'Admin vs User?'
             ].map((q, i) => (
               <button

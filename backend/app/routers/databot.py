@@ -1,31 +1,77 @@
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends
+from typing import Optional
+from fastapi import APIRouter, Depends, Header
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import VisionDetectionModel, SensorNodeModel, ActMissionHistoryModel, DroneConfigModel
+from app.models import UserModel, VisionDetectionModel, SensorNodeModel, ActMissionHistoryModel, DroneConfigModel
 from app.schemas import DatabotChatRequest, DatabotChatResponse
 from app.routers.vision import vision_enabled
+from app.routers.auth import get_current_user
+from app.services.atlas_context import get_atlas_context_summary
+from app.services.llm_service import call_llm_assistant
 
 router = APIRouter(prefix="/api/databot", tags=["Databot Help Assistant"])
 
 @router.post("/chat", response_model=DatabotChatResponse)
 def databot_chat(
     chat_in: DatabotChatRequest,
+    authorization: Optional[str] = Header(None),
+    x_atlas_token: Optional[str] = Header(None),
     db: Session = Depends(get_db)
 ):
     msg = chat_in.message.lower().strip()
     ts = datetime.now(timezone.utc).strftime("%H:%M:%S UTC")
 
+    # Determine requesting user for context & role scoping
+    try:
+        current_user = get_current_user(authorization=authorization, x_atlas_token=x_atlas_token, db=db)
+    except Exception:
+        current_user = None
+
     suggested = [
-        "What is current camera status?",
-        "Explain women safety alerts",
-        "How does drone activation setup work?",
-        "What can Admin vs User roles do?"
+        "Current system status",
+        "Explain latest event",
+        "Camera status",
+        "Current mission"
     ]
 
-    # Keyword intent matching
-    if any(w in msg for w in ["camera", "video", "feed", "vision", "turn on", "turn off"]):
+    # 1. Build safe read-only operational context
+    atlas_context = get_atlas_context_summary(db, current_user)
+
+    # 2. Attempt LLM Assistant call (if API key is configured)
+    ai_reply = call_llm_assistant(chat_in.message, atlas_context)
+    if ai_reply:
+        return DatabotChatResponse(
+            reply=ai_reply,
+            timestamp=ts,
+            suggested_topics=suggested
+        )
+
+    # 3. Security Guardrail for Direct Action Requests (in fallback mode)
+    if any(phrase in msg for phrase in ["turn off camera", "turn on camera", "shutdown camera", "disable vision"]):
+        return DatabotChatResponse(
+            reply="I am a read-only ATLAS Intelligence Assistant and cannot execute camera controls directly. Authorized administrators can use the protected Command Center control.",
+            timestamp=ts,
+            suggested_topics=suggested
+        )
+
+    if any(phrase in msg for phrase in ["activate drone", "dispatch drone", "launch drone", "trigger drone"]):
+        return DatabotChatResponse(
+            reply="I am a read-only ATLAS Intelligence Assistant and cannot execute drone dispatch directly. Authorized administrators can configure and monitor activation setup in the protected Command Center.",
+            timestamp=ts,
+            suggested_topics=suggested
+        )
+
+    if any(phrase in msg for phrase in ["reveal secret", "show password", "give api key", "ignore instructions", "show database"]):
+        return DatabotChatResponse(
+            reply="Security Alert: Secret key inspection, database dump, and instruction override requests are strictly rejected.",
+            timestamp=ts,
+            suggested_topics=suggested
+        )
+
+    # 4. Keyword / Rule-Based Fallback Engine
+    if any(w in msg for w in ["camera", "video", "feed", "vision"]):
         cam_state = "ACTIVE (ON)" if vision_enabled else "OFFLINE (OFF)"
         reply = (
             f"The ATLAS Vision camera is currently {cam_state}. "
@@ -45,12 +91,11 @@ def databot_chat(
 
     elif any(w in msg for w in ["alert", "emergency", "theft", "intruder", "safety", "abuse", "health"]):
         reply = (
-            "ATLAS Women Safety & Surveillance System monitors multi-modal inputs: "
+            "ATLAS Women Safety & Surveillance System monitors multi-modal inputs:\n"
             "1. Unknown Person Entered @ Sector 7\n"
             "2. Motion / Floor Load Confirmed by ESP32 Sense Nodes\n"
             "3. Emergency & Theft Risk Model Evaluation by Core Engine\n"
-            "4. Immediate Dispatch & Evidence Recording Transmission.\n"
-            "All events are logged in the View Status & Evidence history."
+            "4. Immediate Dispatch & Evidence Recording Transmission."
         )
 
     elif any(w in msg for w in ["role", "admin", "user", "permission", "access"]):
@@ -87,3 +132,4 @@ def databot_chat(
         timestamp=ts,
         suggested_topics=suggested
     )
+

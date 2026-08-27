@@ -1,15 +1,20 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { apiService } from '../services/apiService';
+import { FaceAuthModal } from '../components/FaceAuthModal';
 import { Shield, Lock, User, KeyRound, AlertCircle, ArrowRight } from 'lucide-react';
 
 export const LoginPage = () => {
-  const { login, loading } = useAuth();
+  const { login, completeLogin, loading } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [pendingAuth, setPendingAuth] = useState(null); // { user, token }
+
+  const isFaceAuthEnabled = String(import.meta.env.VITE_ENABLE_FACE_AUTH || '').toLowerCase() === 'true';
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e?.preventDefault();
     if (!username || !password) {
       setErrorMsg('Please enter both username and password.');
       return;
@@ -17,9 +22,66 @@ export const LoginPage = () => {
 
     setErrorMsg('');
     const res = await login(username, password);
-    if (!res.success) {
+    if (res.success && res.user && res.token) {
+      if (isFaceAuthEnabled) {
+        // Log verification attempt
+        apiService.postEvent({
+          id: `EVT-AUTH-${Date.now()}`,
+          timestamp: new Date().toISOString(),
+          source: 'CORE',
+          type: 'FACE_VERIFICATION_ATTEMPT',
+          message: `Face verification prompt presented for user: ${res.user.username}`,
+          status: 'PENDING',
+          data: { username: res.user.username, role: res.user.role }
+        }).catch(() => {});
+
+        // Open FaceAuthModal before completing session
+        setPendingAuth({ user: res.user, token: res.token });
+      } else {
+        // Direct login if feature flag is false/undefined
+        completeLogin(res.user, res.token);
+      }
+    } else {
       setErrorMsg(res.error || 'Authentication failed. Please check credentials.');
     }
+  };
+
+  const handleFaceComplete = (meta) => {
+    if (pendingAuth) {
+      apiService.postEvent({
+        id: `EVT-AUTH-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        source: 'CORE',
+        type: 'FACE_VERIFICATION_COMPLETED',
+        message: `Face verification completed successfully for user: ${pendingAuth.user.username}`,
+        status: 'COMPLETED',
+        data: { username: pendingAuth.user.username, role: pendingAuth.user.role, ...meta }
+      }).catch(() => {});
+
+      completeLogin(pendingAuth.user, pendingAuth.token);
+      setPendingAuth(null);
+    }
+  };
+
+  const handleFaceSkip = (meta) => {
+    if (pendingAuth) {
+      apiService.postEvent({
+        id: `EVT-AUTH-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        source: 'CORE',
+        type: 'FACE_VERIFICATION_SKIPPED',
+        message: `Face verification skipped (credential fallback) for user: ${pendingAuth.user.username}`,
+        status: 'COMPLETED',
+        data: { username: pendingAuth.user.username, role: pendingAuth.user.role, ...meta }
+      }).catch(() => {});
+
+      completeLogin(pendingAuth.user, pendingAuth.token);
+      setPendingAuth(null);
+    }
+  };
+
+  const handleFaceCancel = () => {
+    setPendingAuth(null);
   };
 
   const fillQuickDemo = (demoUser, demoPass) => {
@@ -302,6 +364,16 @@ export const LoginPage = () => {
           </div>
         </div>
       </div>
+
+      {/* OPTIONAL FACE VERIFICATION STEP MODAL */}
+      {pendingAuth && (
+        <FaceAuthModal
+          user={pendingAuth.user}
+          onComplete={handleFaceComplete}
+          onSkip={handleFaceSkip}
+          onCancel={handleFaceCancel}
+        />
+      )}
     </div>
   );
 };
