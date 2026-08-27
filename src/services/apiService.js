@@ -257,6 +257,21 @@ export const apiService = {
 
   getActHistory: () =>
     safeFetch('/api/act/history'),
+
+
+  // --------------------------------------------------
+  // AUDIT & PRIVACY
+  // --------------------------------------------------
+
+  getAuditLogs: (limit = 50, actor = '', action = '') => {
+    let query = `?limit=${limit}`;
+    if (actor) query += `&actor=${encodeURIComponent(actor)}`;
+    if (action) query += `&action=${encodeURIComponent(action)}`;
+    return safeFetch(`/api/audit/logs${query}`);
+  },
+
+  getPrivacyPolicy: () =>
+    safeFetch('/api/privacy/policy'),
 };
 
 export default apiService;

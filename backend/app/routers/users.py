@@ -50,6 +50,21 @@ def create_user(
     db.commit()
     db.refresh(new_user)
 
+    # Log user registration to Audit Trail
+    try:
+        from app.services.audit_service import log_audit_entry
+        log_audit_entry(
+            db=db,
+            actor_username=admin.username,
+            actor_role=admin.role,
+            action="USER_CREATE",
+            resource="USERS",
+            status="SUCCESS",
+            details={"created_user": new_user.username, "assigned_role": new_user.role, "name": new_user.name}
+        )
+    except Exception:
+        pass
+
     return UserResponse(
         id=new_user.id,
         username=new_user.username,

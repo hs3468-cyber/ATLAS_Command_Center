@@ -178,3 +178,29 @@ class ActMissionResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+# Audit Trail Pydantic Schemas
+class AuditLogResponse(BaseModel):
+    id: int
+    audit_id: str
+    timestamp: str
+    actor_username: str
+    actor_role: str
+    action: str
+    resource: str
+    status: str
+    details: Dict[str, Any] = Field(default_factory=dict)
+
+    class Config:
+        from_attributes = True
+
+# Privacy & Consent Pydantic Schemas
+class PrivacyPolicyResponse(BaseModel):
+    monitoring_purpose: str
+    collected_data: List[str]
+    excluded_data: List[str]
+    retention_policy: str
+    privacy_mode: str
+    authorized_access: str
+    disclaimer: str
+

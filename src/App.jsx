@@ -12,6 +12,8 @@ import { AtlasActPage } from './pages/AtlasActPage';
 import { EvidenceRecordingsPage } from './pages/EvidenceRecordingsPage';
 import { DroneSetupPage } from './pages/DroneSetupPage';
 import { UserManagementPage } from './pages/UserManagementPage';
+import { PrivacyConsentPage } from './pages/PrivacyConsentPage';
+import { AdminAuditTrailPage } from './pages/AdminAuditTrailPage';
 
 function MainAppContent() {
   const { isAuthenticated, isAdmin, isUser } = useAuth();
@@ -42,6 +44,12 @@ function MainAppContent() {
 
       case 'evidence-recordings':
         return <EvidenceRecordingsPage setActivePage={setActivePage} />;
+
+      case 'privacy-consent':
+        return <PrivacyConsentPage />;
+
+      case 'admin-audit':
+        return isAdmin ? <AdminAuditTrailPage /> : <MissionControlPage setActivePage={setActivePage} />;
 
       case 'drone-setup':
         return isAdmin ? <DroneSetupPage /> : <MissionControlPage setActivePage={setActivePage} />;

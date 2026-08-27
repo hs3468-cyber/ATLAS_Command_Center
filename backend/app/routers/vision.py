@@ -84,7 +84,8 @@ def get_vision_status(
 def update_vision_status(
     enabled: Optional[bool] = None,
     body: Optional[VisionStatusUpdate] = None,
-    admin: UserModel = Depends(require_admin)
+    admin: UserModel = Depends(require_admin),
+    db: Session = Depends(get_db)
 ):
     global vision_enabled
 
@@ -94,6 +95,21 @@ def update_vision_status(
         vision_enabled = body.enabled
     else:
         vision_enabled = not vision_enabled
+
+    # Log camera power state change to Audit Trail
+    try:
+        from app.services.audit_service import log_audit_entry
+        log_audit_entry(
+            db=db,
+            actor_username=admin.username,
+            actor_role=admin.role,
+            action="CAMERA_CHANGE",
+            resource="VISION",
+            status="SUCCESS",
+            details={"new_state": "ACTIVE" if vision_enabled else "OFF"}
+        )
+    except Exception:
+        pass
 
     return {
         "success": True,

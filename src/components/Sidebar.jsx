@@ -12,6 +12,7 @@ import {
   Video,
   Settings,
   Users,
+  FileText,
   LogOut,
   UserCheck
 } from 'lucide-react';
@@ -31,6 +32,8 @@ export const Sidebar = ({
     { id: 'core-intelligence', label: 'Core Intelligence', icon: Brain, accent: '#8b5cf6', concept: 'CORE', roles: ['ADMIN', 'USER'] },
     { id: 'atlas-act', label: 'ATLAS Act', icon: Zap, accent: '#f59e0b', concept: 'ACT', roles: ['ADMIN', 'USER'] },
     { id: 'evidence-recordings', label: 'Evidence & Clips', icon: Video, accent: '#ef4444', concept: 'EVIDENCE', roles: ['ADMIN', 'USER'] },
+    { id: 'privacy-consent', label: 'Privacy & Consent', icon: Shield, accent: '#10b981', concept: 'PRIVACY', roles: ['ADMIN', 'USER'] },
+    { id: 'admin-audit', label: 'Audit Trail', icon: FileText, accent: '#6366f1', concept: 'AUDIT', roles: ['ADMIN'] },
     { id: 'drone-setup', label: 'Drone Activation Setup', icon: Settings, accent: '#f59e0b', concept: 'SETUP', roles: ['ADMIN'] },
     { id: 'user-management', label: 'User Management', icon: Users, accent: '#3b82f6', concept: 'USERS', roles: ['ADMIN'] },
   ];

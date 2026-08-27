@@ -52,4 +52,21 @@ def update_drone_config(
 
     db.commit()
     db.refresh(config)
+
+    # Log drone activation setup update to Audit Trail
+    try:
+        from app.services.audit_service import log_audit_entry
+        updated_dict = {k: v for k, v in update_in.model_dump(exclude_unset=True).items()}
+        log_audit_entry(
+            db=db,
+            actor_username=admin.username,
+            actor_role=admin.role,
+            action="DRONE_CONFIG_UPDATE",
+            resource="ACT",
+            status="SUCCESS",
+            details=updated_dict
+        )
+    except Exception:
+        pass
+
     return config

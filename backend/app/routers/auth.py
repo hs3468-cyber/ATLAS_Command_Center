@@ -74,6 +74,21 @@ def login(login_req: UserLoginRequest, db: Session = Depends(get_db)):
     # Simple secure session token for demo
     token = f"atlas_token_{user.username}_{user.role}"
 
+    # Log successful login to Audit Trail
+    try:
+        from app.services.audit_service import log_audit_entry
+        log_audit_entry(
+            db=db,
+            actor_username=user.username,
+            actor_role=user.role,
+            action="LOGIN",
+            resource="AUTH",
+            status="SUCCESS",
+            details={"ip": "127.0.0.1", "auth_method": "CREDENTIALS"}
+        )
+    except Exception:
+        pass
+
     user_resp = UserResponse(
         id=user.id,
         username=user.username,

@@ -115,6 +115,14 @@ def get_atlas_context_summary(db: Session, current_user: Optional[UserModel] = N
             }
         },
         "recent_events": recent_events,
+        "privacy_and_governance": {
+            "monitoring_purpose": "Women's Safety & Authorized Emergency Monitoring",
+            "data_collection": "Safety alerts, environmental telemetry, detection metadata, action audit logs",
+            "excluded_data": "Raw biometric storage, raw video/camera frames, passwords, tokens, API keys",
+            "log_retention_policy": "30 Days automated purge",
+            "privacy_mode": "ACTIVE",
+            "audit_trail": "Append-only, role-restricted to ADMIN only"
+        },
         "requesting_user": {
             "username": current_user.username if current_user else "authorized_user",
             "role": current_user.role if current_user else "USER",

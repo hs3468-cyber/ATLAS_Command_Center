@@ -131,3 +131,24 @@ class ActMissionHistoryModel(Base):
         Index("idx_act_mission_id", "mission_id"),
         Index("idx_act_stage", "stage"),
     )
+
+class AuditLogModel(Base):
+    __tablename__ = "audit_logs"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    audit_id = Column(String(100), unique=True, index=True, nullable=False)
+    timestamp = Column(String(50), index=True, nullable=False)
+    actor_username = Column(String(100), index=True, nullable=False)
+    actor_role = Column(String(50), nullable=False)
+    action = Column(String(100), index=True, nullable=False)
+    resource = Column(String(100), nullable=False)
+    status = Column(String(50), nullable=False, default="SUCCESS")
+    details_json = Column(Text, nullable=True, default="{}")
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    __table_args__ = (
+        Index("idx_audit_actor", "actor_username"),
+        Index("idx_audit_action", "action"),
+        Index("idx_audit_timestamp", "timestamp"),
+    )
+
