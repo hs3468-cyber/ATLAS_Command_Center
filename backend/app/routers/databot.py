@@ -40,7 +40,7 @@ def databot_chat(
     atlas_context = get_atlas_context_summary(db, current_user)
 
     # 2. Attempt LLM Assistant call (if API key is configured)
-    ai_reply = call_llm_assistant(chat_in.message, atlas_context)
+    ai_reply = call_llm_assistant(chat_in.message, atlas_context, history=chat_in.history)
     if ai_reply:
         return DatabotChatResponse(
             reply=ai_reply,

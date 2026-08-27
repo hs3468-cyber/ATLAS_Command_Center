@@ -130,10 +130,10 @@ export const apiService = {
   // DATABOT HELP ASSISTANT
   // --------------------------------------------------
 
-  askDatabot: (message) =>
+  askDatabot: (message, history = []) =>
     safeFetch('/api/databot/chat', {
       method: 'POST',
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ message, history }),
     }),
 
 

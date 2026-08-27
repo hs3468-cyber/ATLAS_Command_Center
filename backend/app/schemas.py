@@ -49,6 +49,7 @@ class DroneConfigUpdateRequest(BaseModel):
 # Databot Help Assistant Schemas
 class DatabotChatRequest(BaseModel):
     message: str = Field(..., description="User question or prompt for Databot")
+    history: Optional[List[Dict[str, str]]] = Field(default_factory=list, description="Recent conversation history turns")
 
 class DatabotChatResponse(BaseModel):
     reply: str = Field(..., description="Databot helpful answer")

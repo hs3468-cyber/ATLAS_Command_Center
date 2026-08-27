@@ -1,26 +1,104 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { apiService } from '../services/apiService';
-import { Bot, X, Send, Sparkles, Shield, HelpCircle } from 'lucide-react';
+import { Bot, X, Send, Mic, MicOff, Volume2, VolumeX, AlertCircle, RefreshCw } from 'lucide-react';
 
 export const Databot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     {
       sender: 'bot',
-      text: 'Hello! I am ATLAS Databot, your Women Safety & System Help Assistant. Ask me anything about camera status, safety alerts, evidence, drone setup, or user roles.',
+      text: 'Hello! I am ATLAS Databot, your Multimodal Women Safety & System Assistant. Ask me anything via text or voice about camera status, safety alerts, evidence, drone setup, or user roles.',
       timestamp: 'Just now'
     }
   ]);
 
   const [inputMsg, setInputMsg] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [speechNotice, setSpeechNotice] = useState('');
+  const [speakingIndex, setSpeakingIndex] = useState(null);
 
-  const handleSend = async (e) => {
-    e?.preventDefault();
-    if (!inputMsg.trim()) return;
+  const recognitionRef = useRef(null);
 
-    const userText = inputMsg.trim();
+  // Initialize Speech Recognition API
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const rec = new SpeechRecognition();
+      rec.continuous = false;
+      rec.interimResults = false;
+      rec.lang = 'en-US';
+
+      rec.onstart = () => {
+        setIsListening(true);
+        setSpeechNotice('Listening... Speak now');
+      };
+
+      rec.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        if (transcript) {
+          setInputMsg(transcript);
+          handleSendText(transcript);
+        }
+      };
+
+      rec.onerror = (err) => {
+        console.warn('[SPEECH RECOGNITION] Error:', err.error);
+        setIsListening(false);
+        if (err.error === 'not-allowed' || err.error === 'permission-denied') {
+          setSpeechNotice('Microphone access denied. You can use text chat.');
+        } else if (err.error === 'no-speech') {
+          setSpeechNotice('No speech detected. Please try again.');
+        } else {
+          setSpeechNotice('Speech recognition error. Text chat remains available.');
+        }
+        setTimeout(() => setSpeechNotice(''), 4000);
+      };
+
+      rec.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = rec;
+    }
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
+      }
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+  const toggleListening = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setSpeechNotice('Voice input is not supported in this browser. Please use text chat.');
+      setTimeout(() => setSpeechNotice(''), 4000);
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+    } else {
+      setSpeechNotice('');
+      try {
+        recognitionRef.current?.start();
+      } catch {
+        setIsListening(false);
+      }
+    }
+  };
+
+  const handleSendText = async (textToSend) => {
+    if (!textToSend || !textToSend.trim()) return;
+
+    const userText = textToSend.trim();
     setInputMsg('');
+    setSpeechNotice('');
 
     const userMsgObj = {
       sender: 'user',
@@ -32,7 +110,8 @@ export const Databot = () => {
     setLoading(true);
 
     try {
-      const res = await apiService.askDatabot(userText);
+      // Pass recent messages array for multi-turn conversational NLP context
+      const res = await apiService.askDatabot(userText, messages);
       const botText = res.isConnected && res.data ? res.data.reply : 'I am ATLAS Databot. Please ensure backend connectivity for dynamic responses.';
       
       setMessages(prev => [
@@ -57,8 +136,36 @@ export const Databot = () => {
     }
   };
 
+  const handleSend = (e) => {
+    e?.preventDefault();
+    handleSendText(inputMsg);
+  };
+
   const handleQuickQuestion = (qText) => {
     setInputMsg(qText);
+    handleSendText(qText);
+  };
+
+  // Browser Text-To-Speech (SpeechSynthesis)
+  const speakMessage = (index, text) => {
+    if (!('speechSynthesis' in window)) return;
+
+    if (speakingIndex === index) {
+      window.speechSynthesis.cancel();
+      setSpeakingIndex(null);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    utterance.rate = 1.0;
+    
+    utterance.onend = () => setSpeakingIndex(null);
+    utterance.onerror = () => setSpeakingIndex(null);
+
+    setSpeakingIndex(index);
+    window.speechSynthesis.speak(utterance);
   };
 
   return (
@@ -86,7 +193,7 @@ export const Databot = () => {
             zIndex: 9990,
             transition: 'all 0.3s ease',
           }}
-          title="Open ATLAS Databot Help Assistant"
+          title="Open Multimodal ATLAS Databot Assistant"
         >
           <Bot size={26} />
           <span
@@ -111,9 +218,9 @@ export const Databot = () => {
             position: 'fixed',
             bottom: '24px',
             right: '24px',
-            width: '380px',
+            width: '390px',
             maxWidth: 'calc(100vw - 32px)',
-            height: '520px',
+            height: '530px',
             maxHeight: 'calc(100vh - 48px)',
             background: '#ffffff',
             borderRadius: '14px',
@@ -154,9 +261,9 @@ export const Databot = () => {
               <div>
                 <div style={{ fontSize: '14px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
                   ATLAS Databot
-                  <span style={{ fontSize: '10px', background: '#374151', color: '#60a5fa', padding: '2px 6px', borderRadius: '10px', fontWeight: 600 }}>⚡ ATLAS AI</span>
+                  <span style={{ fontSize: '10px', background: '#374151', color: '#60a5fa', padding: '2px 6px', borderRadius: '10px', fontWeight: 600 }}>⚡ NLP & VOICE</span>
                 </div>
-                <div style={{ fontSize: '11px', color: '#9ca3af' }}>Women Safety & System Assistant</div>
+                <div style={{ fontSize: '11px', color: '#9ca3af' }}>Multimodal Women Safety Assistant</div>
               </div>
             </div>
 
@@ -198,6 +305,7 @@ export const Databot = () => {
               >
                 <div
                   style={{
+                    position: 'relative',
                     padding: '10px 14px',
                     borderRadius: msg.sender === 'user' ? '12px 12px 0 12px' : '12px 12px 12px 0',
                     background: msg.sender === 'user' ? '#111827' : '#ffffff',
@@ -209,7 +317,30 @@ export const Databot = () => {
                   }}
                 >
                   {msg.text}
+
+                  {/* VOICE SPEAKER OUTPUT BUTTON FOR BOT MESSAGES */}
+                  {msg.sender === 'bot' && 'speechSynthesis' in window && (
+                    <button
+                      type="button"
+                      onClick={() => speakMessage(index, msg.text)}
+                      title={speakingIndex === index ? 'Stop speaking' : 'Read message aloud'}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: speakingIndex === index ? '#2563eb' : '#9ca3af',
+                        cursor: 'pointer',
+                        padding: '2px',
+                        marginLeft: '8px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        verticalAlign: 'middle',
+                      }}
+                    >
+                      {speakingIndex === index ? <VolumeX size={14} className="spin" /> : <Volume2 size={14} />}
+                    </button>
+                  )}
                 </div>
+
                 <div
                   style={{
                     fontSize: '10px',
@@ -224,11 +355,40 @@ export const Databot = () => {
             ))}
 
             {loading && (
-              <div style={{ alignSelf: 'flex-start', color: '#6b7280', fontSize: '12px', fontStyle: 'italic' }}>
-                ATLAS AI is analyzing operational context...
+              <div style={{ alignSelf: 'flex-start', color: '#6b7280', fontSize: '12px', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <RefreshCw size={12} className="spin" /> ATLAS AI is analyzing operational context...
               </div>
             )}
           </div>
+
+          {/* LISTENING / SPEECH NOTICE BANNER */}
+          {(isListening || speechNotice) && (
+            <div
+              style={{
+                padding: '6px 12px',
+                background: isListening ? '#eff6ff' : '#fef2f2',
+                borderTop: '1px solid #e5e7eb',
+                fontSize: '11px',
+                color: isListening ? '#1d4ed8' : '#991b1b',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+              }}
+            >
+              {isListening ? (
+                <>
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444', animation: 'pulse 1s infinite' }} />
+                  <span>Listening... Speak your query clearly</span>
+                </>
+              ) : (
+                <>
+                  <AlertCircle size={12} />
+                  <span>{speechNotice}</span>
+                </>
+              )}
+            </div>
+          )}
 
           {/* QUICK TOPIC SUGGESTIONS */}
           <div
@@ -268,7 +428,7 @@ export const Databot = () => {
             ))}
           </div>
 
-          {/* INPUT FORM */}
+          {/* INPUT FORM WITH VOICE MIC BUTTON */}
           <form
             onSubmit={handleSend}
             style={{
@@ -283,16 +443,39 @@ export const Databot = () => {
               type="text"
               value={inputMsg}
               onChange={(e) => setInputMsg(e.target.value)}
-              placeholder="Ask Databot something..."
+              placeholder={isListening ? "Listening to your voice..." : "Ask Databot (text or voice)..."}
               style={{
                 flex: 1,
                 padding: '9px 12px',
                 borderRadius: '8px',
-                border: '1px solid #d1d5db',
+                border: isListening ? '1px solid #3b82f6' : '1px solid #d1d5db',
                 fontSize: '13px',
                 outline: 'none',
+                background: isListening ? '#f0f9ff' : '#ffffff',
               }}
             />
+
+            {/* MICROPHONE BUTTON */}
+            <button
+              type="button"
+              onClick={toggleListening}
+              title={isListening ? "Stop listening" : "Speak question using microphone"}
+              style={{
+                background: isListening ? '#ef4444' : '#f3f4f6',
+                color: isListening ? '#ffffff' : '#374151',
+                border: '1px solid #d1d5db',
+                borderRadius: '8px',
+                padding: '9px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {isListening ? <MicOff size={16} /> : <Mic size={16} />}
+            </button>
+
+            {/* SEND BUTTON */}
             <button
               type="submit"
               disabled={!inputMsg.trim() || loading}
