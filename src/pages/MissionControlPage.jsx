@@ -2,7 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { useAtlasSimulation } from '../context/AtlasSimulationContext';
 import { useAuth } from '../context/AuthContext';
 import { apiService } from '../services/apiService';
-import { Eye, Radio, Brain, Zap, ShieldAlert, Video, RefreshCw, AlertTriangle } from 'lucide-react';
+import {
+  Eye,
+  Radio,
+  Brain,
+  Zap,
+  ShieldAlert,
+  Video,
+  RefreshCw,
+  AlertTriangle,
+  Activity,
+  Layers,
+  ArrowRight,
+  Shield
+} from 'lucide-react';
 
 export const MissionControlPage = ({ setActivePage }) => {
   const { currentModuleStates } = useAtlasSimulation();
@@ -136,252 +149,167 @@ export const MissionControlPage = ({ setActivePage }) => {
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: '#ffffff',
-        color: '#1f2937',
-        padding: '40px 30px',
-        fontFamily: 'Arial, sans-serif',
-      }}
-    >
-      <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-
-        {/* HEADER */}
-        <div style={{ textAlign: 'center', marginBottom: '35px' }}>
-          <h1 style={{ margin: 0, fontSize: '32px', fontWeight: 600, color: '#111827' }}>
-            ATLAS Command Center
-          </h1>
-          <p style={{ margin: '8px 0 16px', fontSize: '15px', color: '#6b7280' }}>
-            Intelligent Women Safety & Surveillance System
-          </p>
-
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '6px 16px',
-              border: '1px solid #d1d5db',
-              borderRadius: '20px',
-              background: '#f9fafb',
-              fontSize: '13px',
-              color: '#374151',
-            }}
-          >
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e' }} />
-            Logged in as <strong>{user?.name || 'Authorized User'}</strong> ({user?.role || 'USER'})
+    <div className="mc-container">
+      {/* HEADER CARD */}
+      <header className="mc-header-card">
+        <div className="mc-title-group">
+          <div className="mc-badge-tag">
+            <Activity size={12} className="spin-slow" />
+            ATLAS COMMAND CENTER // MAIN OPERATIONAL HUB
           </div>
+
+          <h1 className="mc-main-title">
+            <Shield className="mc-title-icon" size={28} />
+            ATLAS Mission Control
+          </h1>
+
+          <p className="mc-subtitle">
+            Intelligent Women Safety & Multi-Node Autonomous Surveillance Platform
+          </p>
         </div>
 
-        {/* CAMERA CONTROL CARD (ADMIN PROMINENT CONTROL / USER READ-ONLY) */}
-        <div
-          style={{
-            border: '1px solid #d1d5db',
-            borderRadius: '10px',
-            padding: '24px',
-            marginBottom: '30px',
-            background: '#ffffff',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: '20px',
-          }}
-        >
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-              <Eye size={20} style={{ color: '#2563eb' }} />
-              <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: '#111827' }}>
-                CAMERA STATUS & CONTROL
-              </h2>
-            </div>
+        <div className="mc-user-pill">
+          <span className="mc-pulse-dot" />
+          <span>
+            Logged in as <strong>{user?.name || 'Authorized User'}</strong> ({user?.role || 'USER'})
+          </span>
+        </div>
+      </header>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px' }}>
+      {/* CAMERA CONTROL CARD */}
+      <section className="mc-camera-card">
+        <div className="mc-camera-info">
+          <div className="mc-camera-header">
+            <Eye size={20} style={{ color: 'var(--cyan-bright, #00f2fe)' }} />
+            <h2 className="mc-camera-title">CAMERA STATUS & CONTROL</h2>
+          </div>
+
+          <div className="mc-camera-status-row">
+            <span className={`mc-status-pill ${isCamOn ? 'active' : 'off'}`}>
               <span
                 style={{
-                  width: '10px',
-                  height: '10px',
+                  width: '6px',
+                  height: '6px',
                   borderRadius: '50%',
-                  background: isCamOn ? '#22c55e' : '#ef4444',
+                  background: isCamOn ? '#4ade80' : '#f87171'
                 }}
               />
-              <strong style={{ fontSize: '16px', color: '#111827' }}>
-                {isCamOn ? 'ON // SURVEILLANCE ACTIVE' : 'OFF // SURVEILLANCE PAUSED'}
-              </strong>
-              <span style={{ fontSize: '13px', color: '#6b7280', marginLeft: '10px' }}>
-                ({feedStatus})
-              </span>
-            </div>
-
-            {camError && (
-              <div style={{ marginTop: '8px', color: '#dc2626', fontSize: '12px', fontWeight: 600 }}>
-                ⚠ {camError}
-              </div>
-            )}
-          </div>
-
-          {isAdmin ? (
-            <button
-              type="button"
-              onClick={toggleCamera}
-              disabled={updatingCam}
-              style={{
-                background: '#111827',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '6px',
-                padding: '12px 24px',
-                fontSize: '14px',
-                fontWeight: 600,
-                cursor: updatingCam ? 'not-allowed' : 'pointer',
-                opacity: updatingCam ? 0.7 : 1,
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-              }}
-            >
-              {updatingCam && <RefreshCw size={16} className="spin" />}
-              {updatingCam
-                ? 'UPDATING...'
-                : isCamOn
-                  ? 'TURN OFF CAMERA'
-                  : 'TURN ON CAMERA'}
-            </button>
-          ) : (
-            <div style={{ fontSize: '13px', color: '#6b7280', fontStyle: 'italic' }}>
-              Admin permission required to alter camera power state.
-            </div>
-          )}
-        </div>
-
-        {/* 4 CONCEPT REFERENCE MODULES */}
-        <div style={{ marginBottom: '35px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#111827', marginBottom: '16px' }}>
-            ATLAS Operational Architecture
-          </h2>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
-            {modules.map((mod) => {
-              const IconComp = mod.icon;
-              return (
-                <div
-                  key={mod.key}
-                  style={{
-                    border: '1px solid #d1d5db',
-                    borderRadius: '10px',
-                    padding: '20px',
-                    background: '#ffffff',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                      <span style={{ fontSize: '12px', fontWeight: 700, color: '#6b7280' }}>
-                        {mod.name}
-                      </span>
-                      <IconComp size={18} style={{ color: '#111827' }} />
-                    </div>
-
-                    <strong style={{ fontSize: '15px', color: '#111827', display: 'block', marginBottom: '4px' }}>
-                      {mod.device}
-                    </strong>
-
-                    <p style={{ margin: 0, fontSize: '13px', color: '#6b7280', lineHeight: '1.4' }}>
-                      {mod.description}
-                    </p>
-                  </div>
-
-                  <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid #f3f4f6', textAlign: 'right' }}>
-                    <button
-                      type="button"
-                      onClick={() => openModule(mod.key)}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: '#2563eb',
-                        fontSize: '13px',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        padding: 0,
-                      }}
-                    >
-                      View Details →
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* WOMEN SAFETY & SURVEILLANCE VIEW STATUS SECTION */}
-        <div
-          style={{
-            border: '1px solid #d1d5db',
-            borderRadius: '10px',
-            padding: '24px',
-            background: '#ffffff',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
-            <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: '#111827', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <ShieldAlert size={20} style={{ color: '#dc2626' }} /> Safety Status & Environment Log
-            </h2>
-            <span style={{ fontSize: '13px', color: '#6b7280' }}>
-              Real Backend System Events
+              {isCamOn ? 'ON // SURVEILLANCE ACTIVE' : 'OFF // SURVEILLANCE PAUSED'}
             </span>
+
+            <span className="mc-feed-tag">({feedStatus})</span>
           </div>
 
-          {loadingEvents ? (
-            <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
-              Loading safety status events...
-            </div>
-          ) : events.length > 0 ? (
-            <div style={{ border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden' }}>
-              {events.slice(0, 6).map((evt, idx) => (
-                <div
-                  key={evt.id || idx}
-                  style={{
-                    padding: '14px 18px',
-                    borderBottom: idx !== Math.min(events.length, 6) - 1 ? '1px solid #e5e7eb' : 'none',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    gap: '15px',
-                    fontSize: '14px',
-                  }}
-                >
-                  <div>
-                    <strong style={{ color: '#111827', fontSize: '14px', display: 'block' }}>
-                      {evt.type || evt.event_type || 'Safety Alert'}
-                    </strong>
-                    <span style={{ color: '#4b5563', fontSize: '13px', marginTop: '2px', display: 'block' }}>
-                      {evt.message}
-                    </span>
-                  </div>
-
-                  <div style={{ textAlign: 'right', shrink: 0 }}>
-                    <span style={{ fontSize: '12px', color: '#6b7280', display: 'block' }}>
-                      {evt.timestamp || '10:50:54 UTC'}
-                    </span>
-                    <span style={{ fontSize: '11px', fontWeight: 700, color: '#2563eb' }}>
-                      SOURCE: {evt.source}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
-              No safety events recorded yet.
+          {camError && (
+            <div style={{ marginTop: '8px', color: '#f87171', fontSize: '0.8rem', fontWeight: 600 }}>
+              ⚠ {camError}
             </div>
           )}
         </div>
 
-      </div>
+        {isAdmin ? (
+          <button
+            type="button"
+            onClick={toggleCamera}
+            disabled={updatingCam}
+            className="mc-camera-btn"
+          >
+            {updatingCam ? (
+              <RefreshCw size={16} className="spin" />
+            ) : (
+              <Video size={16} />
+            )}
+            {updatingCam
+              ? 'UPDATING...'
+              : isCamOn
+                ? 'TURN OFF CAMERA'
+                : 'TURN ON CAMERA'}
+          </button>
+        ) : (
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted, #94a3b8)', fontStyle: 'italic' }}>
+            Admin permission required to alter camera power state.
+          </div>
+        )}
+      </section>
+
+      {/* OPERATIONAL ARCHITECTURE MODULES */}
+      <section>
+        <h2 className="mc-section-title">
+          <Layers size={18} style={{ color: 'var(--cyan-bright, #00f2fe)' }} />
+          ATLAS Operational Architecture
+        </h2>
+
+        <div className="mc-modules-grid">
+          {modules.map((mod) => {
+            const IconComp = mod.icon;
+            return (
+              <div key={mod.key} className="mc-module-card">
+                <div>
+                  <div className="mc-module-header">
+                    <span className="mc-module-name-badge">{mod.name}</span>
+                    <IconComp size={20} className="mc-module-icon" />
+                  </div>
+
+                  <div className="mc-module-device">{mod.device}</div>
+                  <p className="mc-module-desc">{mod.description}</p>
+                </div>
+
+                <div className="mc-module-footer">
+                  <button
+                    type="button"
+                    onClick={() => openModule(mod.key)}
+                    className="mc-module-btn"
+                  >
+                    View Details <ArrowRight size={14} />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* SAFETY STATUS & ENVIRONMENT LOG */}
+      <section className="mc-events-card">
+        <div className="mc-events-header">
+          <h2 className="mc-events-title">
+            <ShieldAlert size={20} /> Safety Status & Environment Log
+          </h2>
+          <span className="mc-events-subtitle">REAL BACKEND SYSTEM EVENTS</span>
+        </div>
+
+        {loadingEvents ? (
+          <div style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--text-muted, #94a3b8)', fontFamily: 'var(--font-mono)' }}>
+            Loading safety status events...
+          </div>
+        ) : events.length > 0 ? (
+          <div className="mc-events-list">
+            {events.slice(0, 6).map((evt, idx) => (
+              <div key={evt.id || idx} className="mc-event-row">
+                <div className="mc-event-main">
+                  <span className="mc-event-type">
+                    {evt.type || evt.event_type || 'Safety Alert'}
+                  </span>
+                  <span className="mc-event-msg">{evt.message}</span>
+                </div>
+
+                <div className="mc-event-meta">
+                  <span className="mc-event-time">
+                    {evt.timestamp || '10:50:54 UTC'}
+                  </span>
+                  <span className="mc-event-source">
+                    SOURCE: {evt.source}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--text-muted, #94a3b8)', fontFamily: 'var(--font-mono)' }}>
+            No safety events recorded yet.
+          </div>
+        )}
+      </section>
     </div>
   );
 };
