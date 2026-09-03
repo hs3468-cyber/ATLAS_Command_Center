@@ -4,7 +4,7 @@
  * Frontend <-> FastAPI Backend
  *
  * Local development:
- * VITE_API_BASE_URL=http://127.0.0.1:8001
+ * VITE_API_BASE_URL=http://127.0.0.1:8000
  *
  * Production Render Deployment:
  * VITE_API_BASE_URL=https://atlas-command-center-backend.onrender.com
@@ -21,7 +21,7 @@ const getBackendUrl = () => {
   ) {
     return 'https://atlas-command-center-backend.onrender.com';
   }
-  return 'http://127.0.0.1:8001';
+  return 'http://127.0.0.1:8000';
 };
 
 const API_BASE_URL = getBackendUrl();

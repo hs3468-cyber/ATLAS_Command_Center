@@ -14,7 +14,7 @@ const getWsUrl = () => {
   ) {
     return 'wss://atlas-command-center-backend.onrender.com/ws/events';
   }
-  return 'ws://127.0.0.1:8001/ws/events';
+  return 'ws://127.0.0.1:8000/ws/events';
 };
 
 class AtlasWebSocketService {
