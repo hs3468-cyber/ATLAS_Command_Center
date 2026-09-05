@@ -2,7 +2,22 @@ import React, { useEffect, useState } from 'react';
 import { apiService } from '../services/apiService';
 import { useAuth } from '../context/AuthContext';
 import { visionEventsData } from '../mock/visionData';
-import { Eye, Video, Radio, Shield, RefreshCw, AlertCircle, Play, Crosshair, Monitor } from 'lucide-react';
+import {
+  Eye,
+  Video,
+  Radio,
+  Shield,
+  RefreshCw,
+  AlertCircle,
+  Play,
+  Crosshair,
+  Monitor,
+  Activity,
+  ScanLine,
+  Target,
+  Layers,
+  AlertTriangle
+} from 'lucide-react';
 
 export const VisionIntelligencePage = () => {
   const { isAdmin } = useAuth();
@@ -93,307 +108,210 @@ export const VisionIntelligencePage = () => {
   const activeSubject = detections[0] || { subject_id: 'ATLAS-P001', status: 'TRACKING', confidence: 0.994, sector: 'Sector 7' };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: '#ffffff',
-        color: '#1f2937',
-        padding: '40px 30px',
-        fontFamily: 'Arial, sans-serif',
-      }}
-    >
-      <div style={{ maxWidth: '950px', margin: '0 auto' }}>
+    <div className="vi-container">
 
-        {/* HEADER */}
-        <div
-          style={{
-            borderBottom: '1px solid #e5e7eb',
-            paddingBottom: '20px',
-            marginBottom: '25px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: '15px',
-          }}
-        >
-          <div>
-            <h1 style={{ margin: 0, fontSize: '30px', fontWeight: 600, color: '#111827' }}>
-              VISION INTELLIGENCE
-            </h1>
-            <p style={{ marginTop: '7px', color: '#6b7280', fontSize: '15px' }}>
-              Real-time optical surveillance, subject tracking, and camera controls
-            </p>
+      {/* ── HEADER ─────────────────────────────────────────────── */}
+      <header className="vi-header-card">
+        <div className="vi-title-group">
+          <div className="vi-badge-tag">
+            <ScanLine size={12} />
+            ATLAS // OPTICAL INTELLIGENCE MODULE
           </div>
-
-          {isAdmin && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: 600 }}>POWER STATE:</span>
-              <button
-                type="button"
-                onClick={toggleVision}
-                disabled={updating}
-                style={{
-                  background: isOn ? '#111827' : '#ef4444',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: '6px',
-                  padding: '10px 20px',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  cursor: updating ? 'not-allowed' : 'pointer',
-                  opacity: updating ? 0.7 : 1,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                }}
-              >
-                {updating ? 'UPDATING...' : isOn ? 'TURN OFF CAMERA' : 'TURN ON CAMERA'}
-              </button>
-            </div>
-          )}
+          <h1 className="vi-main-title">
+            <Eye className="vi-title-icon" size={28} />
+            VISION INTELLIGENCE
+          </h1>
+          <p className="vi-subtitle">
+            Real-time optical surveillance, subject tracking, and camera controls
+          </p>
         </div>
 
-        {/* DEDICATED LIVE SURVEILLANCE FEED VIEWPORT */}
-        <div
-          style={{
-            border: '1px solid #d1d5db',
-            borderRadius: '12px',
-            overflow: 'hidden',
-            marginBottom: '30px',
-            background: '#ffffff',
-            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.05)',
-          }}
-        >
-          {/* VIEWPORT HEADER BAR */}
-          <div
-            style={{
-              padding: '14px 20px',
-              background: '#111827',
-              color: '#ffffff',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              gap: '10px',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <Monitor size={18} style={{ color: '#60a5fa' }} />
-              <strong style={{ fontSize: '15px', letterSpacing: '0.03em' }}>
-                LIVE SURVEILLANCE FEED
-              </strong>
-
-              {isOn ? (
-                <span
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '5px',
-                    background: '#16a34a',
-                    color: '#ffffff',
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    padding: '3px 9px',
-                    borderRadius: '12px',
-                  }}
-                >
-                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ffffff' }} />
-                  🟢 LIVE
-                </span>
+        {isAdmin && (
+          <div className="vi-power-controls">
+            <span className="vi-power-label">POWER STATE</span>
+            <button
+              type="button"
+              onClick={toggleVision}
+              disabled={updating}
+              className={`vi-toggle-btn ${isOn ? 'vi-toggle-btn--off' : 'vi-toggle-btn--on'}`}
+            >
+              {updating ? (
+                <RefreshCw size={15} className="spin" />
               ) : (
-                <span
-                  style={{
-                    background: '#dc2626',
-                    color: '#ffffff',
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    padding: '3px 9px',
-                    borderRadius: '12px',
-                  }}
-                >
-                  OFFLINE
-                </span>
+                <Video size={15} />
               )}
-            </div>
-
-            <div style={{ fontSize: '11px', color: '#9ca3af', fontWeight: 600 }}>
-              SOFTWARE DEMONSTRATION // SIMULATED SURVEILLANCE FEED
-            </div>
+              {updating ? 'UPDATING...' : isOn ? 'TURN OFF CAMERA' : 'TURN ON CAMERA'}
+            </button>
           </div>
+        )}
+      </header>
 
-          {/* VIEWPORT SCREEN AREA */}
-          <div
-            style={{
-              width: '100%',
-              minHeight: '340px',
-              background: isOn ? '#0f172a' : '#1e293b',
-              color: '#ffffff',
-              position: 'relative',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              padding: '20px',
-              boxSizing: 'border-box',
-            }}
-          >
+      {/* ── LIVE SURVEILLANCE FEED VIEWPORT ────────────────────── */}
+      <section className="vi-feed-card">
+
+        {/* Viewport header bar */}
+        <div className="vi-feed-topbar">
+          <div className="vi-feed-topbar-left">
+            <Monitor size={16} style={{ color: 'var(--cyan-bright, #00f2fe)' }} />
+            <span className="vi-feed-topbar-title">LIVE SURVEILLANCE FEED</span>
+
             {isOn ? (
-              <>
-                {/* HUD TOP BAR OVERLAYS */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 2 }}>
-                  <div style={{ background: 'rgba(0, 0, 0, 0.6)', padding: '6px 12px', borderRadius: '4px', fontSize: '12px', fontFamily: 'monospace' }}>
-                    <span style={{ color: '#ef4444', fontWeight: 700, marginRight: '8px' }}>● REC ACTIVE</span>
-                    <span>1080P // 60FPS</span>
-                  </div>
-
-                  <div style={{ background: 'rgba(0, 0, 0, 0.6)', padding: '6px 12px', borderRadius: '4px', fontSize: '12px', fontFamily: 'monospace', color: '#60a5fa' }}>
-                    CAM-04 // {activeSubject.sector || 'Sector 7'} // {liveTime}
-                  </div>
-                </div>
-
-                {/* SIMULATED TARGET TRACKING OVERLAY */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: '40%',
-                    left: '45%',
-                    transform: 'translate(-50%, -50%)',
-                    border: '2px dashed #22c55e',
-                    borderRadius: '8px',
-                    padding: '24px 32px',
-                    background: 'rgba(34, 197, 94, 0.08)',
-                    textAlign: 'center',
-                    boxShadow: '0 0 20px rgba(34, 197, 94, 0.2)',
-                  }}
-                >
-                  <Crosshair size={32} style={{ color: '#22c55e', marginBottom: '6px', opacity: 0.8 }} />
-                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#22c55e', letterSpacing: '0.05em' }}>
-                    TARGET TRACKED: {activeSubject.subject_id}
-                  </div>
-                  <div style={{ fontSize: '11px', color: '#93c5fd', marginTop: '2px' }}>
-                    CONFIDENCE: {((activeSubject.confidence || 0.994) * 100).toFixed(1)}% // LOW HAZARD
-                  </div>
-                </div>
-
-                {/* HUD BOTTOM BAR OVERLAYS */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', zIndex: 2, marginTop: '180px' }}>
-                  <div style={{ background: 'rgba(0, 0, 0, 0.6)', padding: '8px 12px', borderRadius: '4px', fontSize: '12px', maxWidth: '380px' }}>
-                    <div style={{ fontSize: '10px', color: '#9ca3af', fontWeight: 700 }}>OBSERVATION STATUS</div>
-                    <div style={{ color: '#34d399', fontWeight: 600, marginTop: '2px' }}>
-                      Optical surveillance active. Monitoring perimeter sector line.
-                    </div>
-                  </div>
-
-                  <div style={{ background: 'rgba(239, 68, 68, 0.2)', border: '1px solid rgba(239, 68, 68, 0.4)', padding: '6px 12px', borderRadius: '4px', fontSize: '11px', color: '#fca5a5', fontWeight: 700 }}>
-                    SIMULATED DEMONSTRATION FEED
-                  </div>
-                </div>
-              </>
+              <span className="vi-live-badge">
+                <span className="vi-live-dot" />
+                LIVE
+              </span>
             ) : (
-              /* CAMERA OFF STATE */
-              <div
-                style={{
-                  height: '300px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  textAlign: 'center',
-                }}
-              >
-                <Video size={48} style={{ color: '#ef4444', opacity: 0.6, marginBottom: '14px' }} />
-                <h3 style={{ margin: '0 0 8px', fontSize: '20px', color: '#f87171', fontWeight: 700 }}>
-                  LIVE FEED UNAVAILABLE — CAMERA OFF
-                </h3>
-                <p style={{ margin: 0, fontSize: '14px', color: '#94a3b8', maxWidth: '420px', lineHeight: '1.5' }}>
-                  The Vision camera has been turned off by the Admin. Turn on the camera to resume live optical surveillance and subject tracking.
-                </p>
-              </div>
+              <span className="vi-offline-badge">OFFLINE</span>
             )}
           </div>
-        </div>
-
-        {/* SURVEILLANCE METRICS & CURRENT REPORT GRID */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: '20px',
-            marginBottom: '30px',
-          }}
-        >
-          {/* SURVEILLANCE STATUS CARD */}
-          <div style={{ border: '1px solid #d1d5db', borderRadius: '8px', padding: '20px', background: '#ffffff' }}>
-            <h2 style={{ margin: '0 0 15px', fontSize: '17px', fontWeight: 600 }}>Surveillance Parameters</h2>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', fontSize: '14px' }}>
-              <div>
-                <div style={{ color: '#6b7280', fontSize: '12px' }}>Surveillance Mode</div>
-                <strong style={{ color: isOn ? '#16a34a' : '#dc2626' }}>
-                  {isOn ? 'Active Surveillance' : 'Inactive'}
-                </strong>
-              </div>
-
-              <div>
-                <div style={{ color: '#6b7280', fontSize: '12px' }}>Recording Status</div>
-                <strong style={{ color: isOn ? '#16a34a' : '#6b7280' }}>
-                  {isOn ? 'Active Recording' : 'Stopped'}
-                </strong>
-              </div>
-
-              <div>
-                <div style={{ color: '#6b7280', fontSize: '12px' }}>Feed Status</div>
-                <strong>{isOn ? feedStatus : 'OFFLINE'}</strong>
-              </div>
-
-              <div>
-                <div style={{ color: '#6b7280', fontSize: '12px' }}>Observation Status</div>
-                <strong>{isOn ? 'Monitoring Sector 7' : 'Not Monitoring'}</strong>
-              </div>
-            </div>
-          </div>
-
-          {/* LATEST SYSTEM REPORT CARD */}
-          <div style={{ border: '1px solid #d1d5db', borderRadius: '8px', padding: '20px', background: '#ffffff' }}>
-            <h2 style={{ margin: '0 0 12px', fontSize: '17px', fontWeight: 600 }}>Latest System Report</h2>
-            <p style={{ margin: 0, color: '#4b5563', fontSize: '14px', lineHeight: '1.6' }}>
-              {isOn
-                ? `Vision camera is actively monitoring ${activeSubject.sector || 'Sector 7'}. Subject ${activeSubject.subject_id} tagged with confidence ${((activeSubject.confidence || 0.994) * 100).toFixed(1)}%.`
-                : 'The Vision camera is turned off. Optical surveillance and event recording are paused.'}
-            </p>
+          <div className="vi-feed-topbar-right">
+            SOFTWARE DEMONSTRATION // SIMULATED SURVEILLANCE FEED
           </div>
         </div>
 
-        {/* RECENT VISION EVENTS */}
-        <div style={{ border: '1px solid #d1d5db', borderRadius: '8px', padding: '20px', background: '#ffffff' }}>
-          <h2 style={{ margin: '0 0 15px', fontSize: '18px', fontWeight: 600 }}>Recent Vision Events</h2>
-
-          {loading ? (
-            <p style={{ color: '#6b7280' }}>Loading Vision events...</p>
-          ) : events.length > 0 ? (
-            events.slice(0, 5).map((event, index) => (
-              <div
-                key={event.id || index}
-                style={{
-                  padding: '12px 0',
-                  borderBottom: index !== Math.min(events.length, 5) - 1 ? '1px solid #e5e7eb' : 'none',
-                }}
-              >
-                <strong style={{ display: 'block', fontSize: '14px', color: '#374151' }}>
-                  {event.type || event.eventType || 'Vision Event'}
-                </strong>
-
-                <span style={{ display: 'block', marginTop: '4px', fontSize: '13px', color: '#6b7280' }}>
-                  {event.message || event.description || 'Vision observation recorded'}
-                </span>
+        {/* Viewport screen area */}
+        <div className={`vi-feed-screen ${isOn ? 'vi-feed-screen--on' : 'vi-feed-screen--off'}`}>
+          {isOn ? (
+            <>
+              {/* HUD top row */}
+              <div className="vi-hud-top">
+                <div className="vi-hud-chip">
+                  <span className="vi-hud-rec">● REC ACTIVE</span>
+                  <span>1080P // 60FPS</span>
+                </div>
+                <div className="vi-hud-chip vi-hud-chip--blue">
+                  CAM-04 // {activeSubject.sector || 'Sector 7'} // {liveTime}
+                </div>
               </div>
-            ))
+
+              {/* Simulated target tracking overlay */}
+              <div className="vi-target-box">
+                <Crosshair size={32} className="vi-target-icon" />
+                <div className="vi-target-label">
+                  TARGET TRACKED: {activeSubject.subject_id}
+                </div>
+                <div className="vi-target-conf">
+                  CONFIDENCE: {((activeSubject.confidence || 0.994) * 100).toFixed(1)}% // LOW HAZARD
+                </div>
+              </div>
+
+              {/* HUD bottom row */}
+              <div className="vi-hud-bottom">
+                <div className="vi-hud-obs">
+                  <div className="vi-hud-obs-label">OBSERVATION STATUS</div>
+                  <div className="vi-hud-obs-value">
+                    Optical surveillance active. Monitoring perimeter sector line.
+                  </div>
+                </div>
+                <div className="vi-hud-demo-tag">
+                  SIMULATED DEMONSTRATION FEED
+                </div>
+              </div>
+            </>
           ) : (
-            <p style={{ color: '#6b7280' }}>No recent vision events.</p>
+            /* Camera OFF state */
+            <div className="vi-feed-offline-state">
+              <Video size={52} className="vi-feed-offline-icon" />
+              <h3 className="vi-feed-offline-title">LIVE FEED UNAVAILABLE — CAMERA OFF</h3>
+              <p className="vi-feed-offline-msg">
+                The Vision camera has been turned off by the Admin. Turn on the camera to resume live optical surveillance and subject tracking.
+              </p>
+            </div>
           )}
         </div>
+      </section>
 
+      {/* ── METRICS + REPORT GRID ──────────────────────────────── */}
+      <div className="vi-info-grid">
+
+        {/* Surveillance Parameters */}
+        <section className="vi-info-card">
+          <div className="vi-info-card-header">
+            <h2 className="vi-info-card-title">
+              <Radio size={16} />
+              Surveillance Parameters
+            </h2>
+          </div>
+          <div className="vi-params-grid">
+            <div className="vi-param-item">
+              <span className="vi-param-label">Surveillance Mode</span>
+              <span className={`vi-param-value ${isOn ? 'vi-param-value--green' : 'vi-param-value--red'}`}>
+                {isOn ? 'Active Surveillance' : 'Inactive'}
+              </span>
+            </div>
+            <div className="vi-param-item">
+              <span className="vi-param-label">Recording Status</span>
+              <span className={`vi-param-value ${isOn ? 'vi-param-value--green' : 'vi-param-value--muted'}`}>
+                {isOn ? 'Active Recording' : 'Stopped'}
+              </span>
+            </div>
+            <div className="vi-param-item">
+              <span className="vi-param-label">Feed Status</span>
+              <span className="vi-param-value">
+                {isOn ? feedStatus : 'OFFLINE'}
+              </span>
+            </div>
+            <div className="vi-param-item">
+              <span className="vi-param-label">Observation Status</span>
+              <span className="vi-param-value">
+                {isOn ? 'Monitoring Sector 7' : 'Not Monitoring'}
+              </span>
+            </div>
+          </div>
+        </section>
+
+        {/* Latest System Report */}
+        <section className="vi-info-card">
+          <div className="vi-info-card-header">
+            <h2 className="vi-info-card-title">
+              <Target size={16} />
+              Latest System Report
+            </h2>
+          </div>
+          <p className="vi-report-text">
+            {isOn
+              ? `Vision camera is actively monitoring ${activeSubject.sector || 'Sector 7'}. Subject ${activeSubject.subject_id} tagged with confidence ${((activeSubject.confidence || 0.994) * 100).toFixed(1)}%.`
+              : 'The Vision camera is turned off. Optical surveillance and event recording are paused.'}
+          </p>
+        </section>
       </div>
+
+      {/* ── RECENT VISION EVENTS ───────────────────────────────── */}
+      <section className="vi-events-card">
+        <div className="vi-events-header">
+          <h2 className="vi-events-title">
+            <AlertTriangle size={18} />
+            Recent Vision Events
+          </h2>
+          <span className="vi-events-subtitle">VISION SOURCE // OPTICAL PIPELINE</span>
+        </div>
+
+        {loading ? (
+          <div className="vi-events-loading">Loading Vision events...</div>
+        ) : events.length > 0 ? (
+          <div className="vi-events-list">
+            {events.slice(0, 5).map((event, index) => (
+              <div key={event.id || index} className="vi-event-row">
+                <div className="vi-event-marker" />
+                <div className="vi-event-content">
+                  <span className="vi-event-type">
+                    {event.type || event.event_type || 'Vision Event'}
+                  </span>
+                  <span className="vi-event-msg">
+                    {event.message || event.description || 'Vision observation recorded'}
+                  </span>
+                </div>
+                {event.timestamp && (
+                  <span className="vi-event-time">{event.timestamp}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="vi-events-loading">No recent vision events.</div>
+        )}
+      </section>
+
     </div>
   );
 };
